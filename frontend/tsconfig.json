@@ -19,7 +19,9 @@
       }
     ],
     "paths": {
-      "components/*": ["./src/*"]
+      "@/components/*": ["./src/components/*"],
+      "@/app/*": ["./src/app/*"],
+      "@/images/*": ["./public/images/*"] // New alias for images
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
