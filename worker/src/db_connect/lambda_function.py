@@ -1,25 +1,26 @@
-import os
-import supabase
-from .nba_api_interface import getTodaysGames
-from .bets_update import updateBets
-
-
-supabase_url = os.environ.get('SUPABASE_URL')
-supabase_key = os.environ.get('SUPABASE_ANON_KEY')
-supabase_client = supabase.create_client(supabase_url, supabase_key)
+from nba_api_interface import getTodaysGames, getGameInfoByGameId
+from supabase_interface import getEventIdsWhereNullScoreExists, upsert, updateBets
 
 def lambda_handler(event, context):
-    # supabase_client.table('events').select('*').execute()
-
+    
+    # get today's games
     todays_games = getTodaysGames()
     for game_data in todays_games:
         
         # Insert or update event data
-        supabase_client.table('events').upsert(game_data).execute()
+        upsert(game_data)
 
         # Insert or update bets data per user
-        updateBets(supabase_client, game_data)
+        updateBets(game_data)
 
+    # update all events with data - for games
+    event_ids_with_null = getEventIdsWhereNullScoreExists("game")
+    print(event_ids_with_null)
+    for event_id in event_ids_with_null:
+        event_data = getGameInfoByGameId(event_id)
+        if event_data != {} and event_data['status'] == 3:
+            print(event_data)
+            upsert(event_data)
 
     return {
         'statusCode': 200,

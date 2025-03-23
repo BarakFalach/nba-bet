@@ -6,7 +6,7 @@ def isBetExist(supabase_client, game_id, user_id, all_bets):
             return True
     return False
 
-def updateBets(supabase_client, game_data):
+def updateBetsTable(supabase_client, game_data):
 
     response = supabase_client.table('users').select('id').execute()
     user_list=json.loads(response.json())
