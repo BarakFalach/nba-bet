@@ -6,11 +6,11 @@ export default function MainPage() {
   const router = useRouter();
 
   const handleGoToUpcomingBets = () => {
-    router.push('/upcomingBets');
+    router.push('/upcoming-bets');
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-white dark:bg-black">
+    <div className="flex flex-col items-center justify-center min-h-screen px-4 dark:bg-black">
       <div className="w-full max-w-2xl text-center space-y-6">
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-gray-100">
           Welcome to the Betting Hub
