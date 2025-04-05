@@ -7,6 +7,7 @@
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
+    "noImplicitAny": false, // Allow the use of 'any' type
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
@@ -20,8 +21,9 @@
     ],
     "paths": {
       "@/components/*": ["./src/components/*"],
-      "@/app/*": ["./src/app/*"],
-      "@/images/*": ["./public/images/*"] // New alias for images
+      "@/images/*": ["./public/images/*"], // New alias for images
+      "@/lib/*": ["./src/lib/*"],
+      "@/hooks/*": ["./src/hooks/*"],
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
