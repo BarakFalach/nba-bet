@@ -4,7 +4,7 @@ import "./styles/globals.css";
 import Link from "next/link";
 import { HomeIcon } from "@heroicons/react/24/outline";
 import { CalendarIcon } from "@heroicons/react/24/outline";
-import { UserIcon } from "@heroicons/react/24/outline";
+import { WithProviders } from "@/lib/providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   description: "A better app structure with pretty mobile views",
 };
 
-export default function RootLayout({
+function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
@@ -64,13 +64,11 @@ export default function RootLayout({
               <CalendarIcon className="h-6 w-6" />
               <span className="text-sm">Bets</span>
             </Link>
-            <Link href="/login" className="flex flex-col items-center">
-              <UserIcon className="h-6 w-6" />
-              <span className="text-sm">login</span>
-            </Link>
           </div>
         </nav>
       </body>
     </html>
   );
 }
+
+export default WithProviders(RootLayout);
