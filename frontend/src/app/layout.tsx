@@ -20,11 +20,6 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "NBA Bet",
   description: "Track your NBA bets",
-  icons: {
-    icon: "_NBA_logo.png",
-    apple: "_NBA_logo.png",
-
-  }
 };
 
 function RootLayout({
