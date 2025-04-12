@@ -6,6 +6,7 @@ import { HomeIcon } from "@heroicons/react/24/outline";
 import { CalendarIcon } from "@heroicons/react/24/outline";
 import { WithProviders } from "@/lib/providers";
 
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -17,8 +18,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "My App",
-  description: "A better app structure with pretty mobile views",
+  title: "NBA Bet",
+  description: "Track your NBA bets",
+  icons: {
+    icon: "_NBA_logo.png",
+    apple: "_NBA_logo.png",
+
+  }
 };
 
 function RootLayout({
