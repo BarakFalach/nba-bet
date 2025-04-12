@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useRouter } from 'next/navigation';
@@ -78,6 +79,16 @@ export default function LoginPage() {
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
+          {/* Sign Up Button */}
+          <div className="mt-4 text-center">
+          <p className="text-gray-700 dark:text-gray-300">Do not have an account?</p>
+          <button
+            onClick={() => router.push('/signup')} // Redirect to the signup page
+            className="mt-2 text-blue-600 hover:underline font-semibold"
+          >
+            Sign Up
+          </button>
+        </div>
       </div>
     </div>
   );
