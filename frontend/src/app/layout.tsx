@@ -1,34 +1,56 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./styles/globals.css";
-import Link from "next/link";
-import { HomeIcon } from "@heroicons/react/24/outline";
-import { CalendarIcon } from "@heroicons/react/24/outline";
-import { WithProviders } from "@/lib/providers";
-
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
+import './styles/globals.css';
+import Link from 'next/link';
+import { HomeIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon } from '@heroicons/react/24/outline';
+import { WithProviders } from '@/lib/providers';
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
-  title: "NBA Bet",
-  description: "Track your NBA bets",
+  title: 'NBA Bet',
+  description:
+    'Track your NBA bets with ease and stay updated on upcoming games.',
 };
 
-function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>NBA Bet</title>
+        <meta
+          name="description"
+          content="Track your NBA bets with ease and stay updated on upcoming games."
+        />
+
+        {/* Open Graph Meta Tags */}
+        <meta property="og:title" content="NBA Bet" />
+        <meta
+          property="og:description"
+          content="Track your NBA bets with ease and stay updated on upcoming games."
+        />
+        <meta property="og:image" content="/path-to-your-image.jpg" />
+        <meta property="og:url" content="https://your-site-url.com" />
+        <meta property="og:type" content="website" />
+
+        {/* Twitter Meta Tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="NBA Bet" />
+        <meta
+          name="twitter:description"
+          content="Track your NBA bets with ease and stay updated on upcoming games."
+        />
+        <meta name="twitter:image" content="/path-to-your-image.jpg" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -37,17 +59,6 @@ function RootLayout({
         <div className="w-full bg-gray-800 text-white py-4 px-6 shadow-md">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <h1 className="text-xl font-bold">NBA Bet</h1>
-            {/* <nav className="flex space-x-4">
-              <Link href="/" className="hover:underline">
-                Home
-              </Link>
-              <Link href="/upcoming-bets" className="hover:underline">
-                Upcoming Bets
-              </Link>
-              <Link href="/profile" className="hover:underline">
-                Profile
-              </Link>
-            </nav> */}
           </div>
         </div>
 
