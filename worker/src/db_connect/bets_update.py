@@ -61,6 +61,34 @@ def f_playin(is_bet_winner):
         return 10
     return 0
 
+## Points gain calculation Functions based on Win Margin ##
+
+def isClosestWinner(supabase_client, gid, uid):
+    # get all bets for this game
+    response = supabase_client.table('bets').select('*').eq('eventId', gid).execute()
+    all_bets = json.loads(response.json())['data']
+
+    # get the bet for this user
+    bet = getBet(supabase_client, gid, uid)
+
+    my_wm = bet["winMargin"]
+    if my_wm < 0:
+        return 0
+
+    is_closest = True
+    for b in all_bets:
+        if b["winMargin"] < 0:  # if negative then ignore
+            continue
+        
+        if b["winMargin"] < my_wm:
+            is_closest = False
+            break
+    
+    if is_closest:
+        return 3
+    else:
+        return 0
+
 
 def updateBetsTable(supabase_client, game_data):
 
@@ -104,15 +132,17 @@ def updateBetsTable(supabase_client, game_data):
 
             # print("game is over -> ", game_data["id"])
             result = game_data["team1"] if game_data["team1Score"] > game_data["team2Score"] else game_data["team2"]
-            winMargin = abs(game_data["team1Score"] - game_data["team2Score"])
+            # winMargin = abs(game_data["team1Score"] - game_data["team2Score"])
 
             # check if user wagered correctly
             if bet["winnerTeam"] == result:
                 is_bet_winner = True 
             else: 
                 is_bet_winner = False
-                winMargin = winMargin * -1  # wrong direction of winMargin
+                # winMargin = winMargin * -1  # wrong direction of winMargin
 
+
+            pointsGainedWinMargin = isClosestWinner(supabase_client, gid, uid)
             pointsGained = trigger_function(calc_func, is_bet_winner)
             
         else:
@@ -121,6 +151,7 @@ def updateBetsTable(supabase_client, game_data):
             winMargin = None
             is_bet_winner = None
             pointsGained = None
+            pointsGainedWinMargin = None
 
             if False:
                 print("game -> ", game_data)
@@ -140,8 +171,9 @@ def updateBetsTable(supabase_client, game_data):
                 "eventType": game_data["eventType"],
                 "closeTime": game_data["startTime"],
                 "result": result,
-                "winMargin": winMargin,
+                # "winMargin": winMargin,
                 "pointsGained": pointsGained,
+                "pointsGainedWinMargin": pointsGainedWinMargin,
                 "calcFunc": calc_func
             }
         
