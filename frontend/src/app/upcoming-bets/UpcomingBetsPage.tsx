@@ -13,7 +13,13 @@ function UpcomingBetsPage() {
       try {
         const response = await fetch("api/events");
         const data = await response.json();
-        setEvents(data);
+
+        const upcomingEvents = data.filter((event: any) => {
+          const eventStartTime = new Date(event.startTime).getTime();
+          const now = Date.now();
+          return eventStartTime > now; // Keep only events that start in the future
+        });
+        setEvents(upcomingEvents);
       } catch (error) {
         console.error('Error fetching events:', error);
       } finally {
