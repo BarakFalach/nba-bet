@@ -5,18 +5,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+  const {userId} = req.query;
+
+
+
 
   try {
-    const today = new Date().toISOString(); // Get today's date in ISO format
-
-    // Query bets where closeTime is before today and userId is '2'
+    const today = new Date();
+    
     const { data, error } = await supabase
-      .from('bets')
-      .select('*')
-      .gt('closeTime', today) // closeTime is less than today
-      .eq('userId', '2'); // userId is equal to '2'
+    .from('bets')
+    .select(`
+      *,
+      events:eventId (*)
+    `)
+    .gt('closeTime', today.toISOString())
+    .eq('userId', userId);
+
 
     if (error) {
+      debugger
       throw error;
     }
 

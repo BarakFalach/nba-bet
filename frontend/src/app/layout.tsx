@@ -1,4 +1,5 @@
-import type { Metadata } from 'next';
+'use client';
+
 import { Geist, Geist_Mono } from 'next/font/google';
 import './styles/globals.css';
 import Link from 'next/link';
@@ -15,12 +16,6 @@ const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
 });
-
-export const metadata: Metadata = {
-  title: 'NBA Bet',
-  description:
-    'Track your NBA bets with ease and stay updated on upcoming games.',
-};
 
 function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
