@@ -109,7 +109,6 @@ def updateBetsTable(supabase_client, game_data):
         # calculate correct calculation function
         calc_func = getCalcFunc(game_data["round"])
 
-        print(f"game -> {game_data.get("id")}   |||   round  -> {game_data["round"]}   |||   uid -> {uid[0:12]}...   |||   bet -> {bet["id"]}")
         if bet == {}:
 
             # games fresh from the api do no have a round
@@ -126,6 +125,8 @@ def updateBetsTable(supabase_client, game_data):
 
             new_bet = upsert(supabase_client, bet_data, 'bets')
             bet = json.loads(new_bet.json())['data'][0]
+
+        print(f"game -> {game_data.get("id")}   |||   round  -> {game_data["round"]}   |||   uid -> {uid[0:12]}...   |||   bet -> {bet["id"]}")
 
         # game is over and can calculate points
         if game_data["status"] == 3:
