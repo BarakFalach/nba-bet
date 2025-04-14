@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabaseClient'; // Adjust the import path to yo
 
 interface Betting {
   winnerTeam: string;
+  winMargin: number;
 }
 
 interface PlaceBetArgs {
@@ -25,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Update the database with the new betting data
     const { data, error } = await supabase
       .from('bets') // Replace 'bets' with your actual table name
-      .update({ winnerTeam: betting.winnerTeam }) // Update the specific column
+      .update({ winnerTeam: betting.winnerTeam, winMargin: betting.winMargin }) // Update the specific column
       .eq('id', betId); // Match the bet by its ID
 
     if (error) {

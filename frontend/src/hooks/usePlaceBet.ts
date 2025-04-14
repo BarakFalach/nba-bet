@@ -1,21 +1,26 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { QueryKeys } from '@/lib/constants';
 
-interface PlaceBetArgs {
-  betId: number;
+interface Betting {
   winnerTeam: string;
+  winMargin: number;
+}
+
+interface PlaceBetArgs {
+  betId: string;
+  betting: Betting;
 }
 
 export const usePlaceBet = () => {
   const queryClient = useQueryClient();
 
-  const placeBetEndPoint = async ({ betId, winnerTeam }: PlaceBetArgs) => {
+  const placeBetEndPoint = async ({ betId, betting }: PlaceBetArgs) => {
     const response = await fetch('/api/placeBet', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ betId, betting:{winnerTeam} }),
+      body: JSON.stringify({ betId, betting }),
     });
 
     if (!response.ok) {
@@ -25,7 +30,7 @@ export const usePlaceBet = () => {
     return response.json();
   };
 
-  const placeBet = async ({ betId, winnerTeam }: PlaceBetArgs) => {
+  const placeBet = async ({ betId, betting }: PlaceBetArgs) => {
     // Get the current state of bets
     const previousBets = queryClient.getQueryData<any[]>([QueryKeys.BETS]);
 
@@ -33,12 +38,12 @@ export const usePlaceBet = () => {
       // Optimistically update the bets
       queryClient.setQueryData([QueryKeys.BETS], (oldBets: any[] | undefined) =>
         oldBets?.map((bet) =>
-          bet.id === betId ? { ...bet, winnerTeam } : bet
+          bet.id === betId ? { ...bet, betting } : bet
         )
       );
 
       // Call the API
-      await placeBetEndPoint({ betId, winnerTeam });
+      await placeBetEndPoint({ betId, betting });
     } catch (error) {
       console.error('Error placing bet:', error);
 

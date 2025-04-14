@@ -3,7 +3,7 @@ import Logo from './Logo'; // Import the Logo component
 import { usePlaceBet } from '@/hooks/usePlaceBet';
 
 export interface Bet {
-  id: number;
+  id: string;
   winnerTeam: string | null;
   winMargin: number;
   result: string;
@@ -37,14 +37,24 @@ interface PlaceBetProps {
 
 const PlaceBet: React.FC<PlaceBetProps> = ({ bet, onClose }) => {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(bet.winnerTeam);
-  const {placeBet} = usePlaceBet();
+  const [pointDiff, setPointDiff] = useState<number | ''>(''); // State for point difference
+  const { placeBet } = usePlaceBet();
 
   const handlePlaceBet = () => {
     if (!selectedTeam) {
       alert('Please select a team to place your bet.');
       return;
     }
-    placeBet({betId: bet.id, winnerTeam: selectedTeam});
+
+    if (pointDiff === '' || pointDiff < 0) {
+      alert('Please enter a valid point difference.');
+      return;
+    }
+
+    placeBet({ betId: bet.id, betting: {
+      winnerTeam: selectedTeam,
+      winMargin: pointDiff,
+    } });
     onClose(); // Close the overlay after placing the bet
   };
 
@@ -88,8 +98,8 @@ const PlaceBet: React.FC<PlaceBetProps> = ({ bet, onClose }) => {
           <button
             className={`flex items-center justify-start py-3 px-4 rounded-lg text-lg font-semibold transition-all ${
               selectedTeam === bet.events.team1
-              ? 'bg-blue-400 text-white shadow-lg scale-105' // Selected state
-              : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 hover:scale-105 active:scale-95'
+                ? 'bg-blue-400 text-white shadow-lg scale-105' // Selected state
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 hover:scale-105 active:scale-95'
             }`}
             onClick={() => setSelectedTeam(bet.events.team1)}
           >
@@ -99,10 +109,10 @@ const PlaceBet: React.FC<PlaceBetProps> = ({ bet, onClose }) => {
             </div>
           </button>
           <button
-            className={`flex items-center justify-left py-3 px-4 rounded-lg text-lg font-semibold transition-all ${
+            className={`flex items-center justify-start py-3 px-4 rounded-lg text-lg font-semibold transition-all ${
               selectedTeam === bet.events.team2
                 ? 'bg-blue-400 text-white shadow-lg scale-105' // Selected state
-              : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 hover:scale-105 active:scale-95'
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 hover:scale-105 active:scale-95'
             }`}
             onClick={() => setSelectedTeam(bet.events.team2)}
           >
@@ -111,6 +121,24 @@ const PlaceBet: React.FC<PlaceBetProps> = ({ bet, onClose }) => {
               <span>{bet.events.team2}</span>
             </div>
           </button>
+        </div>
+
+        {/* Point Difference Input */}
+        <div className="mb-6">
+          <label
+            htmlFor="point-diff"
+            className="block text-gray-700 dark:text-gray-300 font-semibold mb-2"
+          >
+            Point Difference Guess
+          </label>
+          <input
+            type="number"
+            id="point-diff"
+            value={pointDiff}
+            onChange={(e) => setPointDiff(Number(e.target.value))}
+            className="w-full px-4 py-2 border rounded-lg text-gray-900 dark:text-gray-100 bg-gray-200 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter your point difference guess"
+          />
         </div>
 
         {/* Action Buttons */}
