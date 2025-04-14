@@ -178,7 +178,7 @@ def updateBetsTable(supabase_client, game_data):
                 "calcFunc": calc_func
             }
         
-        print("bet_data  -> ", bet_data)
+        # print("bet_data  -> ", bet_data)
         
         response = upsert(supabase_client, bet_data, 'bets')
         # if game_data["status"] == 1:
