@@ -38,7 +38,8 @@ const formattedTime = new Intl.DateTimeFormat('en-US', {
             ? 'bg-gray-100 dark:bg-gray-900' // Default background for placed bets
             : 'bg-blue-100 dark:bg-blue-900 border-2 border-blue-500' // Highlight for unplaced bets
         }`}
-        onClick={() => setIsPlaceBetOpen(true)} // Open PlaceBet on click
+        onClick={() => bet.winnerTeam === null ? setIsPlaceBetOpen(true) : () => {}} // Open PlaceBet on click
+        
       >
         <div className="flex items-center justify-between w-full mb-4">
           {/* Team Logos */}

@@ -48,7 +48,7 @@ export function useBets() {
     bet.winnerTeam === null && bet.winMargin === null
   )
 
-  const pendingBets = bets?.filter((bet: Bet) =>
+  const placedBets = bets?.filter((bet: Bet) =>
     bet.winnerTeam !== null && bet.winMargin !== null && bet.result === null
   )
 
@@ -57,9 +57,9 @@ export function useBets() {
 
   return {
     bets,
-    unplacedBets,
-    pendingBets,
-    resolvedBets,
+    unplacedBets : unplacedBets || [],
+    placedBets : placedBets || [],
+    resolvedBets: resolvedBets || [],
     isLoading,
     isError,
   };

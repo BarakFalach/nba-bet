@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Logo from './Logo'; // Import the Logo component
+import Logo from './Logo';
 import { usePlaceBet } from '@/hooks/usePlaceBet';
 
 export interface Bet {
@@ -32,17 +32,16 @@ export interface Event {
 
 interface PlaceBetProps {
   bet: Bet;
-  onClose: () => void; // Callback to close the overlay
+  onClose: () => void;
 }
 
 const PlaceBet: React.FC<PlaceBetProps> = ({ bet, onClose }) => {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(bet.winnerTeam);
   const [pointDiff, setPointDiff] = useState<number | ''>(bet.winMargin || '');
-  const [showFinalWarning, setShowFinalWarning] = useState(false); // State to track whether warning is shown
   const { placeBet } = usePlaceBet();
 
-  // Validate and prepare for placement
-  const handlePlaceButtonClick = () => {
+  // Direct placement without confirmation
+  const handlePlaceBet = () => {
     if (!selectedTeam) {
       alert('Please select a team to place your bet.');
       return;
@@ -53,21 +52,11 @@ const PlaceBet: React.FC<PlaceBetProps> = ({ bet, onClose }) => {
       return;
     }
 
-    // Only show the warning if bet is new or values have changed
-    if (!bet.winnerTeam || bet.winnerTeam !== selectedTeam || bet.winMargin !== pointDiff) {
-      setShowFinalWarning(true);
-    } else {
-      // If nothing changed, just close
-      onClose();
-    }
-  };
-
-  // Final submission after warning acknowledgment
-  const handleFinalSubmission = () => {
+    // Place bet directly
     placeBet({ 
       betId: bet.id, 
       betting: {
-        winnerTeam: selectedTeam || '',
+        winnerTeam: selectedTeam,
         winMargin: Number(pointDiff),
       } 
     });
@@ -119,26 +108,26 @@ const PlaceBet: React.FC<PlaceBetProps> = ({ bet, onClose }) => {
           <button
             className={`flex items-center justify-start py-3 px-4 rounded-lg text-lg font-semibold transition-all ${
               selectedTeam === bet.events.team1
-                ? 'bg-blue-400 text-white shadow-lg scale-105' // Selected state
+                ? 'bg-blue-400 text-white shadow-lg scale-105'
                 : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 hover:scale-105 active:scale-95'
             }`}
             onClick={() => setSelectedTeam(bet.events.team1)}
           >
             <div className="flex items-center gap-6">
-              <Logo teamName={bet.events.team1} /> {/* Team 1 Logo */}
+              <Logo teamName={bet.events.team1} />
               <span>{bet.events.team1}</span>
             </div>
           </button>
           <button
             className={`flex items-center justify-start py-3 px-4 rounded-lg text-lg font-semibold transition-all ${
               selectedTeam === bet.events.team2
-                ? 'bg-blue-400 text-white shadow-lg scale-105' // Selected state
+                ? 'bg-blue-400 text-white shadow-lg scale-105'
                 : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 hover:scale-105 active:scale-95'
             }`}
             onClick={() => setSelectedTeam(bet.events.team2)}
           >
             <div className="flex items-center gap-6">
-              <Logo teamName={bet.events.team2} /> {/* Team 2 Logo */}
+              <Logo teamName={bet.events.team2} />
               <span>{bet.events.team2}</span>
             </div>
           </button>
@@ -174,7 +163,7 @@ const PlaceBet: React.FC<PlaceBetProps> = ({ bet, onClose }) => {
         <div className="flex gap-4 justify-center mt-4">
           <button
             className="py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all flex items-center gap-2"
-            onClick={handlePlaceButtonClick}
+            onClick={handlePlaceBet}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -189,44 +178,6 @@ const PlaceBet: React.FC<PlaceBetProps> = ({ bet, onClose }) => {
           </button>
         </div>
       </div>
-
-      {/* Confirmation Dialog (appears when showFinalWarning is true) */}
-      {showFinalWarning && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-xs w-full">
-            <div className="text-center mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-amber-500" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
-              </svg>
-              <h3 className="text-lg font-bold mt-2 text-gray-900 dark:text-gray-100">Final Confirmation</h3>
-            </div>
-            
-            <p className="text-gray-700 dark:text-gray-300 mb-4 text-center">
-              You are placing a bet on <strong>{selectedTeam}</strong> 
-              {pointDiff ? ` with a ${pointDiff} point margin` : ''}.
-              <br /><br />
-              <span className="text-amber-600 dark:text-amber-400 font-semibold">
-                This action cannot be undone.
-              </span>
-            </p>
-            
-            <div className="flex justify-between gap-3">
-              <button
-                className="flex-1 py-2 px-3 bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-600 transition-all"
-                onClick={() => setShowFinalWarning(false)}
-              >
-                Go Back
-              </button>
-              <button
-                className="flex-1 py-2 px-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition-all"
-                onClick={handleFinalSubmission}
-              >
-                Confirm Bet
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
