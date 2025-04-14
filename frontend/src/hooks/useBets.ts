@@ -3,7 +3,7 @@ import { QueryKeys } from "@/lib/constants";
 import { useUser } from "./useUser";
 
 export interface Bet {
-  id: number;
+  id: string;
   winnerTeam: string | null;
   winMargin: number;
   result: string;
@@ -44,8 +44,22 @@ export function useBets() {
     queryFn: () =>  fetchBets(user?.id || ""),
   });
 
+  const unplacedBets = bets?.filter((bet: Bet) => 
+    bet.winnerTeam === null && bet.winMargin === null
+  )
+
+  const pendingBets = bets?.filter((bet: Bet) =>
+    bet.winnerTeam !== null && bet.winMargin !== null && bet.result === null
+  )
+
+  const resolvedBets = bets?.filter((bet: Bet) => 
+    bet.result !== null )
+
   return {
     bets,
+    unplacedBets,
+    pendingBets,
+    resolvedBets,
     isLoading,
     isError,
   };
