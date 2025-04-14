@@ -72,7 +72,7 @@ def isClosestWinner(supabase_client, gid, uid):
     bet = getBet(supabase_client, gid, uid)
 
     my_wm = bet["winMargin"]
-    if my_wm < 0:
+    if my_wm == None or my_wm < 0:
         return 0
 
     is_closest = True
@@ -177,6 +177,8 @@ def updateBetsTable(supabase_client, game_data):
                 "pointsGainedWinMargin": pointsGainedWinMargin,
                 "calcFunc": calc_func
             }
+        
+        print("bet_data  -> ", bet_data)
         
         response = upsert(supabase_client, bet_data, 'bets')
         # if game_data["status"] == 1:
