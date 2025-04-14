@@ -26,7 +26,7 @@ function MainPage() {
           onClick={handleGoToUpcomingBets}
           className="mt-6 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-lg rounded-xl transition-all duration-200 shadow-md"
         >
-          Go to Upcoming Bets
+          Go to Bets
         </button>
       </div>
     </div>

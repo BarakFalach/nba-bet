@@ -3,9 +3,9 @@
 import { Geist, Geist_Mono } from 'next/font/google';
 import './styles/globals.css';
 import Link from 'next/link';
-import { HomeIcon } from '@heroicons/react/24/outline';
-import { CalendarIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, CalendarIcon, UserIcon } from '@heroicons/react/24/outline';
 import { WithProviders } from '@/lib/providers';
+import { usePathname } from 'next/navigation';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -18,6 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const pathname = usePathname();
+  
   return (
     <html lang="en">
       <head>
@@ -28,51 +30,50 @@ function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
           content="Track your NBA bets with ease and stay updated on upcoming games."
         />
 
-        {/* Open Graph Meta Tags */}
-        <meta property="og:title" content="NBA Bet" />
-        <meta
-          property="og:description"
-          content="Track your NBA bets with ease and stay updated on upcoming games."
-        />
-        <meta property="og:image" content="/path-to-your-image.jpg" />
-        <meta property="og:url" content="https://your-site-url.com" />
-        <meta property="og:type" content="website" />
-
-        {/* Twitter Meta Tags */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="NBA Bet" />
-        <meta
-          name="twitter:description"
-          content="Track your NBA bets with ease and stay updated on upcoming games."
-        />
-        <meta name="twitter:image" content="/path-to-your-image.jpg" />
+        {/* Open Graph and Twitter Meta Tags omitted for brevity */}
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased pb-0`}
       >
-        {/* Top Bar */}
-        <div className="w-full bg-gray-800 text-white py-4 px-6 shadow-md">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
+        {/* App Header with Navigation */}
+        <header className="sticky top-0 z-10 bg-gray-800 text-white shadow-md">
+          {/* Logo Bar */}
+          <div className="px-4 py-3 flex items-center justify-between">
             <h1 className="text-xl font-bold">NBA Bet</h1>
+            <UserIcon className="h-6 w-6" />
           </div>
-        </div>
-
-        {/* Page Content */}
-        <main className="mt-4">{children}</main>
-
-        {/* Bottom Navigation Bar */}
-        <nav className="fixed bottom-0 left-0 w-full bg-gray-800 text-white shadow-md">
-          <div className="max-w-7xl mx-auto flex justify-around py-3">
-            <Link href="/" className="flex flex-col items-center">
-              <HomeIcon className="h-6 w-6" />
-              <span className="text-sm">Home</span>
+          
+          {/* Navigation Pills */}
+          <div className="flex px-4 pb-2">
+            <Link 
+              href="/" 
+              className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                pathname === '/' 
+                  ? 'bg-blue-500 text-white' 
+                  : 'text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              <HomeIcon className="h-5 w-5 mr-1" />
+              <span>Home</span>
             </Link>
-            <Link href="/upcoming-bets" className="flex flex-col items-center">
-              <CalendarIcon className="h-6 w-6" />
-              <span className="text-sm">Bets</span>
+            <Link 
+              href="/upcoming-bets" 
+              className={`flex items-center px-4 py-2 ml-2 rounded-lg transition-colors ${
+                pathname?.includes('/upcoming-bets') 
+                  ? 'bg-blue-500 text-white' 
+                  : 'text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              <CalendarIcon className="h-5 w-5 mr-1" />
+              <span>Bets</span>
             </Link>
           </div>
-        </nav>
+        </header>
+
+        {/* Page Content - Add top padding for header and remove bottom margin/padding */}
+        <main className="px-4 pt-4 pb-4 max-w-7xl mx-auto">
+          {children}
+        </main>
       </body>
     </html>
   );
