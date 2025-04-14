@@ -75,19 +75,14 @@ def isClosestWinner(supabase_client, gid, uid):
     if my_wm == None or my_wm < 0:
         return 0
 
-    is_closest = True
+    wms = []
     for b in all_bets:
-        if b["winMargin"] < 0:  # if negative then ignore
-            continue
-        
-        if b["winMargin"] < my_wm:
-            is_closest = False
-            break
-    
-    if is_closest:
+        wms.append(abs(b["winMargin"] - my_wm))
+
+    if min(wms) == my_wm:
         return 3
-    else:
-        return 0
+    
+    return 0
 
 
 def updateBetsTable(supabase_client, game_data):
