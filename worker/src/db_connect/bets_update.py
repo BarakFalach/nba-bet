@@ -63,7 +63,7 @@ def f_playin(is_bet_winner):
 
 ## Points gain calculation Functions based on Win Margin ##
 
-def isClosestWinner(supabase_client, gid, uid):
+def isClosestWinner(supabase_client, gid, uid, winMargin, result):
     # get all bets for this game
     response = supabase_client.table('bets').select('*').eq('eventId', gid).execute()
     all_bets = json.loads(response.json())['data']
@@ -77,9 +77,17 @@ def isClosestWinner(supabase_client, gid, uid):
 
     wms = []
     for b in all_bets:
-        wms.append(abs(b["winMargin"] - my_wm))
+        # if placed a winMargin and guessed correctly
+        if b["winMargin"] != None and result == b["winnerTeam"]:
+            wms.append(abs(winMargin - b["winMargin"]))
 
-    if min(wms) == my_wm:
+
+    my_delta = abs(my_wm - winMargin)
+    print("wms -> ", wms)
+    print("my_delta -> ", my_delta)
+    print("min(wms) -> ", min(wms))
+
+    if min(wms) == my_delta:
         return 3
     
     return 0
@@ -138,7 +146,8 @@ def updateBetsTable(supabase_client, game_data):
                 # winMargin = winMargin * -1  # wrong direction of winMargin
 
 
-            pointsGainedWinMargin = isClosestWinner(supabase_client, gid, uid)
+            winMargin = game_data.get("team1Score") - game_data.get("team2Score")
+            pointsGainedWinMargin = isClosestWinner(supabase_client, gid, uid, winMargin, result) if is_bet_winner else 0
             pointsGained = trigger_function(calc_func, is_bet_winner)
             
         else:
