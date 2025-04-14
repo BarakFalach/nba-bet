@@ -2,11 +2,20 @@ import sys
 # caution: path[0] is reserved for script path (or '' in REPL)
 sys.path.insert(1, '../src/db_connect')
 
-from nba_api_interface import getTodaysGames, getGameInfoByGameId
+from nba_api_interface import getTodaysGames, getGameInfoByGameId, getSeries
 from supabase_interface import getEventIdsWhereNullScoreExists, upsert, updateBets, getEventsNotInBetsTable, getEventDataByEventId, getAllEvents
 
 def lambda_handler(event, context):
     
+    # get series data
+    series = getSeries()
+    for series_data in series:
+        # Insert or update event data
+        upsert(series_data, 'events')
+
+        # Insert or update bets data per user
+        # updateBets(series_data)
+
     # get today's games
     todays_games = getTodaysGames()
     for game_data in todays_games:
