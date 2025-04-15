@@ -18,13 +18,26 @@ def trigger_function(func_name, *args, **kwargs):
     else:
         return f"Function '{func_name}' not found."
 
-def getCalcFunc(round):
-    if round == "1":
-        return "f_round1"
-    if round == "2":
-        return "f_round2"
-    if round == "3":
-        return "f_round3"
+def getCalcFunc(round, type=""):
+    if round == "firstRound":
+        return "f_firstRound"
+    
+    if round == "secondRound":
+        return "f_secondRound"
+    
+    if round == "conference":
+        if type == "game":
+            return "f_conference_game"
+        if type == "series":
+            return "f_conference_series"
+        
+    if round == "finals":
+        if type == "game":
+            return "f_finals_game"
+        if type == "series":
+            return "f_finals_series"
+        
+
     if round == "playin":
         return "f_playin"
     
@@ -37,42 +50,88 @@ def getCalcFunc(round):
 def f0(is_bet_winner):
     return 0
 
-# round 1
-def f_round1(is_bet_winner):
+# round playin
+def f_playin(is_bet_winner):
     if is_bet_winner:
-        return 6
+        return 2
     return 0
 
-# round 2
-def f_round2(is_bet_winner):
+# First Round
+def f_firstRound(is_bet_winner):
+    if is_bet_winner:
+        return 4
+    return 0
+
+# Second Round
+def f_secondRound(is_bet_winner):
     if is_bet_winner:
         return 8
     return 0
 
-# round 3
-def f_round3(is_bet_winner):
+# Conference Round
+def f_conference_series(is_bet_winner):
     if is_bet_winner:
-        return 10
+        return 8
     return 0
 
-# round playin
-def f_playin(is_bet_winner):
+# Conference Round
+def f_conference_game(is_bet_winner):
     if is_bet_winner:
-        return 10
+        return 2
     return 0
+
+# Finals
+def f_finals_series(is_bet_winner):
+    if is_bet_winner:
+        return 12
+    return 0
+
+# Finals
+def f_finals_game(is_bet_winner):
+    if is_bet_winner:
+        return 4
+    return 0
+
 
 ## Points gain calculation Functions based on Win Margin ##
 
-def isClosestWinner(supabase_client, gid, uid, winMargin, result):
+def isClosestWinner(supabase_client, gid, uid, winMargin, result, playoff_round, event_type):
     # get all bets for this game
     response = supabase_client.table('bets').select('*').eq('eventId', gid).execute()
     all_bets = json.loads(response.json())['data']
 
-    # get the bet for this user
+    # get the win margin for this user
     bet = getBet(supabase_client, gid, uid)
-
     my_wm = bet["winMargin"]
+
     if my_wm == None or my_wm < 0:
+        return 0
+
+    # if exact winMargin
+    if winMargin - b["winMargin"] == 0:
+        if playoff_round == "playin":
+            return 2
+        if playoff_round == "firstRound":
+            return 2
+        if playoff_round == "secondRound":
+            return 4
+        if playoff_round == "conference":
+            if event_type == "game":
+                return 2
+            if event_type == "series":
+                return 4
+        if playoff_round == "finals":
+            if event_type == "game":
+                return 2
+            if event_type == "series":
+                return 4
+
+    # if not exact winMargin
+    # get all the winMargins for this game
+    # and check if my winMargin is the closest
+
+    # if in first or second round then not being exact is zero points
+    if playoff_round == "firstRound" or playoff_round == "secondRound":
         return 0
 
     wms = []
@@ -83,12 +142,19 @@ def isClosestWinner(supabase_client, gid, uid, winMargin, result):
 
 
     my_delta = abs(my_wm - winMargin)
-    print("wms -> ", wms)
-    print("my_delta -> ", my_delta)
-    print("min(wms) -> ", min(wms))
+    # print("wms -> ", wms)
+    # print("my_delta -> ", my_delta)
+    # print("min(wms) -> ", min(wms))
 
     if min(wms) == my_delta:
-        return 3
+        if playoff_round == "playin":
+            return 1
+        if playoff_round == "conference":
+            if event_type == "game":
+                return 1
+        if playoff_round == "finals":
+            if event_type == "game":
+                return 2
     
     return 0
 
@@ -110,7 +176,7 @@ def updateBetsTable(supabase_client, game_data):
         bet = getBet(supabase_client, gid, uid)
 
         # calculate correct calculation function
-        calc_func = getCalcFunc(game_data["round"])
+        calc_func = getCalcFunc(game_data["round"], game_data["eventType"])
 
         if bet == {}:
 
@@ -147,7 +213,9 @@ def updateBetsTable(supabase_client, game_data):
 
 
             winMargin = game_data.get("team1Score") - game_data.get("team2Score")
-            pointsGainedWinMargin = isClosestWinner(supabase_client, gid, uid, winMargin, result) if is_bet_winner else 0
+            playoff_round = game_data["round"]
+            event_type = game_data["eventType"]
+            pointsGainedWinMargin = isClosestWinner(supabase_client, gid, uid, winMargin, result, playoff_round, event_type) if is_bet_winner else 0
             pointsGained = trigger_function(calc_func, is_bet_winner)
             
         else:
