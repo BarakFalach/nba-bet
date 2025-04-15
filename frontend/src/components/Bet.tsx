@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Logo from './Logo';
 import PlaceBet from './PlaceBet';
 import { EnhancedBet } from '@/hooks/useBets';
+import EventType from './EventType'; // Import the EventType component
 
 interface BetProps {
   bet: EnhancedBet;
@@ -15,32 +16,35 @@ export default function Bet(props: BetProps) {
   const [isPlaceBetOpen, setIsPlaceBetOpen] = useState(false);
 
   const formattedDate = new Intl.DateTimeFormat('en-US', {
-  timeZone: 'Asia/Jerusalem',
-  weekday: 'short',
-  month: 'short',
-  day: '2-digit',
-  year: 'numeric',
-}).format(new Date(startTime));
+    timeZone: 'Asia/Jerusalem',
+    weekday: 'short',
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+  }).format(new Date(startTime));
 
-const formattedTime = new Intl.DateTimeFormat('en-US', {
-  timeZone: 'Asia/Jerusalem',
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: false,
-}).format(new Date(startTime));
-
+  const formattedTime = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Jerusalem',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(new Date(startTime));
 
   return (
     <>
       <div
-        className={`flex flex-col items-center justify-center p-4 rounded-2xl shadow-lg max-w-md w-full cursor-pointer ${
+        className={`flex flex-col items-center justify-center p-4 rounded-2xl shadow-lg max-w-md w-full cursor-pointer relative ${
           bet.winnerTeam
             ? 'bg-gray-100 dark:bg-gray-900' // Default background for placed bets
             : 'bg-blue-100 dark:bg-blue-900 border-2 border-blue-500' // Highlight for unplaced bets
         }`}
-        onClick={() => bet.winnerTeam === null ? setIsPlaceBetOpen(true) : () => {}} // Open PlaceBet on click
-        
+        onClick={() =>
+          bet.winnerTeam === null ? setIsPlaceBetOpen(true) : () => {}
+        } // Open PlaceBet on click
       >
+        <div className="absolute top-0 left-0 z-10">
+          <EventType bet={bet} />
+        </div>
         <div className="flex items-center justify-between w-full mb-4">
           {/* Team Logos */}
           <div className="flex flex-col items-center">
@@ -66,7 +70,7 @@ const formattedTime = new Intl.DateTimeFormat('en-US', {
                 </p>
 
                 {/* Win Margin Display */}
-                {bet?.winMargin === null && (
+                {bet?.winMargin !== null && (
                   <p className="text-green-700 dark:text-green-300 text-sm">
                     Win margin:{' '}
                     <span className="font-bold">{bet.winMargin} points</span>
