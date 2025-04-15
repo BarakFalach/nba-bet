@@ -3,7 +3,12 @@
 import { Geist, Geist_Mono } from 'next/font/google';
 import './styles/globals.css';
 import Link from 'next/link';
-import { HomeIcon, CalendarIcon, UserIcon, TrophyIcon } from '@heroicons/react/24/outline';
+import {
+  HomeIcon,
+  CalendarIcon,
+  UserIcon,
+  TrophyIcon,
+} from '@heroicons/react/24/outline';
 import { WithProviders } from '@/lib/providers';
 import { usePathname } from 'next/navigation';
 
@@ -19,12 +24,35 @@ const geistMono = Geist_Mono({
 
 function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const pathname = usePathname();
-  
+
   return (
     <html lang="en">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>NBA Bet</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta
+          name="description"
+          content="Track your NBA bets with ease and stay updated on upcoming games."
+        />
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="manifest" href="/manifest.json" />
+
+        <link rel="apple-touch-icon" href="/icon.png" />
+        <meta name="theme-color" content="#ffffff" />
+        <meta name="background-color" content="#ffffff" />
+
+        
+
+        {/* Open Graph / Twitter */}
+        <meta property="og:title" content="NBA Bet" />
+        <meta
+          property="og:description"
+          content="Track your NBA bets with ease and stay updated on upcoming games."
+        />
+        <meta property="og:image" content="/icon.png" />
+        <meta property="og:url" content="https://yourdomain.com" />
+        <meta name="twitter:card" content="summary_large_image" />
         <meta
           name="description"
           content="Track your NBA bets with ease and stay updated on upcoming games."
@@ -42,36 +70,36 @@ function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
             <h1 className="text-xl font-bold">NBA Bet</h1>
             <UserIcon className="h-6 w-6" />
           </div>
-          
+
           {/* Navigation Pills */}
           <div className="flex px-4 pb-2 overflow-x-auto">
-            <Link 
-              href="/" 
+            <Link
+              href="/"
               className={`flex items-center px-4 py-2 rounded-lg transition-colors flex-shrink-0 ${
-                pathname === '/' 
-                  ? 'bg-blue-500 text-white' 
+                pathname === '/'
+                  ? 'bg-blue-500 text-white'
                   : 'text-gray-300 hover:bg-gray-700'
               }`}
             >
               <HomeIcon className="h-5 w-5 mr-1" />
               <span>Home</span>
             </Link>
-            <Link 
-              href="/upcoming-bets" 
+            <Link
+              href="/upcoming-bets"
               className={`flex items-center px-4 py-2 ml-2 rounded-lg transition-colors flex-shrink-0 ${
-                pathname?.includes('/upcoming-bets') 
-                  ? 'bg-blue-500 text-white' 
+                pathname?.includes('/upcoming-bets')
+                  ? 'bg-blue-500 text-white'
                   : 'text-gray-300 hover:bg-gray-700'
               }`}
             >
               <CalendarIcon className="h-5 w-5 mr-1" />
               <span>Bets</span>
             </Link>
-            <Link 
-              href="/leaderboard" 
+            <Link
+              href="/leaderboard"
               className={`flex items-center px-4 py-2 ml-2 rounded-lg transition-colors flex-shrink-0 ${
-                pathname?.includes('/leaderboard') 
-                  ? 'bg-blue-500 text-white' 
+                pathname?.includes('/leaderboard')
+                  ? 'bg-blue-500 text-white'
                   : 'text-gray-300 hover:bg-gray-700'
               }`}
             >
@@ -82,9 +110,7 @@ function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
         </header>
 
         {/* Page Content - Add top padding for header and remove bottom margin/padding */}
-        <main className="pt-4 pb-4 max-w-7xl ">
-          {children}
-        </main>
+        <main className="pt-4 pb-4 max-w-7xl ">{children}</main>
       </body>
     </html>
   );

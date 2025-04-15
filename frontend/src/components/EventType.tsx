@@ -1,21 +1,21 @@
 import React from 'react';
 import { EnhancedBet } from '@/hooks/useBets';
+import { roundType, PredictionResultPerType } from '../types/events';
 
 interface EventTypeProps {
   bet: EnhancedBet;
 }
 
 const EventType: React.FC<EventTypeProps> = ({ bet }) => {
-  // Extract the event type
-  const eventType = bet?.events?.eventType || 'firstRound';
+  // Extract the event type and round
+  const round = bet?.events?.round || 'firstRound';
+  const eventType = bet?.events?.eventType || 'game';
   
-  // Determine style based on event type
+  // Determine style based on round
   let bgColor = 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
   let label = '';
   
-  
-  
-  switch (eventType?.toLowerCase()) {
+  switch (round?.toLowerCase()) {
     case 'playin':
       label = 'Play-In';
       bgColor = 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
@@ -41,9 +41,46 @@ const EventType: React.FC<EventTypeProps> = ({ bet }) => {
       bgColor = 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
   }
 
+  // Get the normalized round type for score calculation
+  const normalizedRound = round?.toLowerCase() as roundType || 'firstRound';
+  
+  // Get scores for this round type
+  const scoreData = PredictionResultPerType[normalizedRound];
+  
+  // Filter scores based on event type
+  let scores: number[] = [];
+  if (scoreData) {
+    if (eventType === 'series') {
+      scores = [
+        scoreData.correctWinnerSeries,
+        scoreData.correctWinnerExactGames,
+      ].filter(score => score !== undefined) as number[];
+    } else { // 'game', 'playin', or default
+      scores = [
+        scoreData.correctWinnerPoints,
+        scoreData.correctScoreDifferenceExact,
+        scoreData.correctScoreDifferenceClosest
+      ].filter(score => score !== undefined) as number[];
+    }
+  }
+
   return (
-    <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium shadow-sm ${bgColor}`}>
-      {label}
+    <div className={`inline-flex items-center rounded-full text-xs font-medium shadow-sm ${bgColor}`}>
+      <div className="px-2 py-1 border-r border-white/20 dark:border-black/20">
+        {label}
+      </div>
+      {scores.length > 0 && (
+        <div className="px-2 py-1 flex items-center space-x-1">
+          {scores.map((score, index) => (
+            <span 
+              key={index}
+              className="font-bold"
+            >
+              {index > 0 ? '•' : ''} {score}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
