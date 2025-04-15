@@ -5,6 +5,7 @@ import Logo from './Logo';
 import PlaceBet from './PlaceBet';
 import { EnhancedBet } from '@/hooks/useBets';
 import EventType from './EventType'; // Import the EventType component
+import BetCompare from './BetCompare';
 
 interface BetProps {
   bet: EnhancedBet;
@@ -14,6 +15,8 @@ export default function Bet(props: BetProps) {
   const { bet } = props;
   const { team1, team2, startTime } = bet?.events;
   const [isPlaceBetOpen, setIsPlaceBetOpen] = useState(false);
+  const [isBetCompareOpen, setIsBetCompareOpen] = useState(false);
+
 
   const formattedDate = new Intl.DateTimeFormat('en-US', {
     timeZone: 'Asia/Jerusalem',
@@ -38,9 +41,13 @@ export default function Bet(props: BetProps) {
             ? 'bg-gray-100 dark:bg-gray-900' // Default background for placed bets
             : 'bg-blue-100 dark:bg-blue-900 border-2 border-blue-500' // Highlight for unplaced bets
         }`}
-        onClick={() =>
-          bet.winnerTeam === null ? setIsPlaceBetOpen(true) : () => {}
-        } // Open PlaceBet on click
+        onClick={() => {
+          if (bet.winnerTeam === null) {
+            setIsPlaceBetOpen(true);
+          } else {
+            setIsBetCompareOpen(true);
+          }
+        }}
       >
         <div className="absolute top-0 left-0 z-10">
           <EventType bet={bet} />
@@ -100,6 +107,12 @@ export default function Bet(props: BetProps) {
         <PlaceBet
           bet={bet}
           onClose={() => setIsPlaceBetOpen(false)} // Close PlaceBet
+        />
+      )}
+       {isBetCompareOpen && (
+        <BetCompare
+          bet={bet}
+          onClose={() => setIsBetCompareOpen(false)}
         />
       )}
     </>
