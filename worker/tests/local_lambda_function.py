@@ -17,11 +17,11 @@ def lambda_handler(event, context):
         # updateBets(series_data)
 
     # get today's games
-    todays_games = getTodaysGames()
-    for game_data in todays_games:
+    # todays_games = getTodaysGames()
+    # for game_data in todays_games:
         
         # Insert or update event data
-        upsert(game_data, 'events')
+        # upsert(game_data, 'events')
 
         # Insert or update bets data per user
         # updateBets(game_data)
