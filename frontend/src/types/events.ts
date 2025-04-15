@@ -1,8 +1,11 @@
+export type EventType = 'series' | 'game' | 'playin';
+export type roundType = 'firstRound' | 'secondRound' | 'conference' | 'finals' | 'playin';
+
 export interface Event {
-  eventType: 'game' | 'practice' | 'tournament' | null; 
+  eventType: EventType | null; 
   id: string;
   parseEvent: string | null; 
-  round: string | null; 
+  round: roundType | null; 
   startTime: string; 
   status: number; // what is this? 
   team1: string; 
@@ -42,4 +45,43 @@ export enum nbaTeams {
   Raptors = 'Raptors',
   Jazz = 'Jazz',
   Wizards = 'Wizards',
+}
+
+interface PredictionResult {
+  correctWinnerSeries?: number;
+  correctWinnerExactGames?: number;
+  correctWinnerPoints?: number; 
+  correctScoreDifferenceExact?: number;
+  correctScoreDifferenceClosest?: number;
+}
+
+export const PredictionResultPerType: Record<roundType, PredictionResult> = {
+  playin: {
+    correctWinnerPoints: 2,
+    correctScoreDifferenceExact: 4,
+    correctScoreDifferenceClosest: 3,
+  },
+  firstRound: {
+    correctWinnerSeries: 4,
+    correctWinnerExactGames: 6,
+  },
+  secondRound: {
+    correctWinnerSeries: 8,
+    correctWinnerExactGames: 12,
+  },
+  conference: {
+    correctWinnerSeries: 8,
+    correctWinnerExactGames: 12,
+    correctWinnerPoints: 2,
+    correctScoreDifferenceExact: 4,
+    correctScoreDifferenceClosest: 3,
+  },
+  finals: {
+    correctWinnerSeries: 12,
+    correctWinnerExactGames: 16,
+    correctWinnerPoints: 4,
+    correctScoreDifferenceExact: 8,
+    correctScoreDifferenceClosest: 6,
+  },
+
 }
