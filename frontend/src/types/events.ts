@@ -1,5 +1,4 @@
-export type EventType = 'series' | 'game' | 'playin';
-export type roundType = 'firstRound' | 'secondRound' | 'conference' | 'finals' | 'playin';
+
 
 export interface Event {
   eventType: EventType | null; 
@@ -47,7 +46,10 @@ export enum nbaTeams {
   Wizards = 'Wizards',
 }
 
-interface PredictionResult {
+export type EventType = 'series' | 'game' | 'playin';
+export type roundType = 'firstRound' | 'secondRound' | 'conference' | 'finals' | 'playin';
+
+export interface PredictionResult {
   correctWinnerSeries?: number;
   correctWinnerExactGames?: number;
   correctWinnerPoints?: number; 
