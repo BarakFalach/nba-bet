@@ -4,7 +4,7 @@ export interface Bet {
   created_at: string;
   eventId: string;
   eventType: 'playin' | 'firstRound' | 'secondRound' | 'conference' | 'finals'; 
-  id: number; 
+  id: string; 
   pointsGained: number | null; 
   result: string | null; 
   userId: number; 

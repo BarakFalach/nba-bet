@@ -2,16 +2,16 @@
 
 import React, { useState } from 'react';
 import Logo from './Logo';
-import PlaceBet, { Bet as BetType, Event } from './PlaceBet';
+import PlaceBet from './PlaceBet';
+import { EnhancedBet } from '@/hooks/useBets';
 
 interface BetProps {
-  bet: BetType;
-  event: Event;
+  bet: EnhancedBet;
 }
 
 export default function Bet(props: BetProps) {
   const { bet } = props;
-  const { team1, team2, startTime } = props.event;
+  const { team1, team2, startTime } = bet?.events;
   const [isPlaceBetOpen, setIsPlaceBetOpen] = useState(false);
 
   const formattedDate = new Intl.DateTimeFormat('en-US', {
@@ -66,7 +66,7 @@ const formattedTime = new Intl.DateTimeFormat('en-US', {
                 </p>
 
                 {/* Win Margin Display */}
-                {bet.winMargin > 0 && (
+                {bet?.winMargin === null && (
                   <p className="text-green-700 dark:text-green-300 text-sm">
                     Win margin:{' '}
                     <span className="font-bold">{bet.winMargin} points</span>

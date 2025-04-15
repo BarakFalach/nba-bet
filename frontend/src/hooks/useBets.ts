@@ -1,36 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { QueryKeys } from "@/lib/constants";
 import { useUser } from "./useUser";
+import { Bet } from "../types/bets";
+import { Event } from "../types/events";
 
-export interface Bet {
-  id: string;
-  winnerTeam: string | null;
-  winMargin: number;
-  result: string;
-  pointsGained: number;
-  pointsGainedWinMargin: number;
-  calcFunc: string;
-  closeTime: string;
-  created_at: string;
-  userId: string;
-  eventId: number;
+export interface EnhancedBet extends Bet {
   events: Event
 }
 
-export interface Event {
-  id: number;
-  team1: string;
-  team2: string;
-  startTime: string;
-  eventType: string;
-  round: string
-  parseEvent: string // ?
-  team1Score: number
-  team2Score: number
-  status: number // ?
-}
-
-async function fetchBets(userId: string): Promise<Bet[]> {
+async function fetchBets(userId: string): Promise<EnhancedBet[]> {
   const data = await fetch('/api/bets?userId=' + userId)
   const json = await data.json()
   return json;
@@ -44,15 +22,15 @@ export function useBets() {
     queryFn: () =>  fetchBets(user?.id || ""),
   });
 
-  const unplacedBets = bets?.filter((bet: Bet) => 
+  const unplacedBets = bets?.filter((bet: EnhancedBet) => 
     bet.winnerTeam === null && bet.winMargin === null
   )
 
-  const placedBets = bets?.filter((bet: Bet) =>
+  const placedBets = bets?.filter((bet: EnhancedBet) =>
     bet.winnerTeam !== null && bet.winMargin !== null && bet.result === null
   )
 
-  const resolvedBets = bets?.filter((bet: Bet) => 
+  const resolvedBets = bets?.filter((bet: EnhancedBet) => 
     bet.result !== null )
 
   return {

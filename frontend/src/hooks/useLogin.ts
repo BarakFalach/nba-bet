@@ -3,17 +3,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useUser } from './useUser';
+import { LoginCredentials, UserSession } from '../types/user';
 
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-export interface UserSession {
-  access_token: string;
-  refresh_token: string;
-  expires_at: number; // Unix timestamp
-}
 
 export const useLogin = () => {
   const { setUser } = useUser();
