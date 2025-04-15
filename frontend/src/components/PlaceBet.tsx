@@ -1,37 +1,10 @@
 import React, { useState } from 'react';
 import Logo from './Logo';
 import { usePlaceBet } from '@/hooks/usePlaceBet';
-
-export interface Bet {
-  id: string;
-  winnerTeam: string | null;
-  winMargin: number;
-  result: string;
-  pointsGained: number;
-  pointsGainedWinMargin: number;
-  calcFunc: string;
-  closeTime: string;
-  created_at: string;
-  userId: string;
-  eventId: number;
-  events: Event;
-}
-
-export interface Event {
-  id: number;
-  team1: string;
-  team2: string;
-  startTime: string;
-  eventType: string;
-  round: string;
-  parseEvent: string;
-  team1Score: number;
-  team2Score: number;
-  status: number;
-}
+import { EnhancedBet } from '@/hooks/useBets';
 
 interface PlaceBetProps {
-  bet: Bet;
+  bet: EnhancedBet;
   onClose: () => void;
 }
 

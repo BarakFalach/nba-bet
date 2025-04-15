@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Bet from '@/components/Bet';
 import { useBets } from '@/hooks/useBets';
 import { withAuth } from '@/lib/withAuth';
+import PageLoader from '@/components/PageLoader';
 
 function UpcomingBetsPage() {
   const [activeTab, setActiveTab] = useState<'unplaced' | 'placed'>('unplaced');
@@ -11,9 +12,7 @@ function UpcomingBetsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
+      <PageLoader/>
     );
   }
 
@@ -83,7 +82,7 @@ function UpcomingBetsPage() {
         ) : (
           <div className="space-y-4 w-full">
             {activeBets.map((bet) => (
-              <Bet key={bet.id} bet={bet} event={bet.events} />
+              <Bet key={bet.id} bet={bet} />
             ))}
           </div>
         )}

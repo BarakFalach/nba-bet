@@ -3,7 +3,7 @@
 import { Geist, Geist_Mono } from 'next/font/google';
 import './styles/globals.css';
 import Link from 'next/link';
-import { HomeIcon, CalendarIcon, UserIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, CalendarIcon, UserIcon, TrophyIcon } from '@heroicons/react/24/outline';
 import { WithProviders } from '@/lib/providers';
 import { usePathname } from 'next/navigation';
 
@@ -44,10 +44,10 @@ function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
           </div>
           
           {/* Navigation Pills */}
-          <div className="flex px-4 pb-2">
+          <div className="flex px-4 pb-2 overflow-x-auto">
             <Link 
               href="/" 
-              className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+              className={`flex items-center px-4 py-2 rounded-lg transition-colors flex-shrink-0 ${
                 pathname === '/' 
                   ? 'bg-blue-500 text-white' 
                   : 'text-gray-300 hover:bg-gray-700'
@@ -58,7 +58,7 @@ function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
             </Link>
             <Link 
               href="/upcoming-bets" 
-              className={`flex items-center px-4 py-2 ml-2 rounded-lg transition-colors ${
+              className={`flex items-center px-4 py-2 ml-2 rounded-lg transition-colors flex-shrink-0 ${
                 pathname?.includes('/upcoming-bets') 
                   ? 'bg-blue-500 text-white' 
                   : 'text-gray-300 hover:bg-gray-700'
@@ -67,11 +67,22 @@ function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
               <CalendarIcon className="h-5 w-5 mr-1" />
               <span>Bets</span>
             </Link>
+            <Link 
+              href="/leaderboard" 
+              className={`flex items-center px-4 py-2 ml-2 rounded-lg transition-colors flex-shrink-0 ${
+                pathname?.includes('/leaderboard') 
+                  ? 'bg-blue-500 text-white' 
+                  : 'text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              <TrophyIcon className="h-5 w-5 mr-1" />
+              <span>Leaderboard</span>
+            </Link>
           </div>
         </header>
 
         {/* Page Content - Add top padding for header and remove bottom margin/padding */}
-        <main className="px-4 pt-4 pb-4 max-w-7xl mx-auto">
+        <main className="pt-4 pb-4 max-w-7xl ">
           {children}
         </main>
       </body>
