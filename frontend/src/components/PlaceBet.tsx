@@ -13,6 +13,9 @@ const PlaceBet: React.FC<PlaceBetProps> = ({ bet, onClose }) => {
   const [pointDiff, setPointDiff] = useState<number | ''>(bet.winMargin || '');
   const { placeBet } = usePlaceBet();
 
+  // Determine if this is a game-type event (game or playin) or a series
+  const isGameType = bet.events.eventType === 'game' || bet.events.eventType === 'playin';
+
   // Direct placement without confirmation
   const handlePlaceBet = () => {
     if (!selectedTeam) {
@@ -21,7 +24,13 @@ const PlaceBet: React.FC<PlaceBetProps> = ({ bet, onClose }) => {
     }
 
     if (pointDiff === '' || pointDiff < 0) {
-      alert('Please enter a valid point difference.');
+      alert(`Please enter a valid ${isGameType ? 'point difference' : 'series length'}.`);
+      return;
+    }
+
+    // For series, validate that it's one of the allowed values: 4, 5, 6, 7
+    if (!isGameType && ![4, 5, 6, 7].includes(Number(pointDiff))) {
+      alert('Series length must be 4, 5, 6, or 7 games.');
       return;
     }
 
@@ -106,23 +115,55 @@ const PlaceBet: React.FC<PlaceBetProps> = ({ bet, onClose }) => {
           </button>
         </div>
 
-        {/* Point Difference Input */}
-        <div className="mb-6">
-          <label
-            htmlFor="point-diff"
-            className="block text-gray-700 dark:text-gray-300 font-semibold mb-2"
-          >
-            Point Difference Guess
-          </label>
-          <input
-            type="number"
-            id="point-diff"
-            value={pointDiff}
-            onChange={(e) => setPointDiff(Number(e.target.value))}
-            className="w-full px-4 py-2 border rounded-lg text-gray-900 dark:text-gray-100 bg-gray-200 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter your point difference guess"
-          />
-        </div>
+        {/* Point Difference/Series Length Input */}
+        {isGameType ? (
+          // Point Difference Input for game/playin
+          <div className="mb-6">
+            <label
+              htmlFor="point-diff"
+              className="block text-gray-700 dark:text-gray-300 font-semibold mb-2"
+            >
+              Point Difference Guess
+            </label>
+            <input
+              type="number"
+              id="point-diff"
+              value={pointDiff}
+              onChange={(e) => setPointDiff(Number(e.target.value))}
+              className="w-full px-4 py-2 border rounded-lg text-gray-900 dark:text-gray-100 bg-gray-200 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter your point difference guess"
+              min="0"
+            />
+          </div>
+        ) : (
+          // Series Length Selector for series
+          <div className="mb-6">
+            <label
+              className="block text-gray-700 dark:text-gray-300 font-semibold mb-2"
+            >
+              Series Length (Games)
+            </label>
+            <div className="flex justify-between gap-2">
+              {[4, 5, 6, 7].map((games) => (
+                <button
+                  key={games}
+                  type="button"
+                  onClick={() => setPointDiff(games)}
+                  className={`flex-1 py-3 px-2 rounded-lg text-center transition-all ${
+                    pointDiff === games
+                      ? 'bg-blue-400 text-white shadow-md'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {games}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              Select the number of games it will take to complete the series
+            </p>
+          </div>
+        )}
 
         {/* Visual finality indicator - icon and subtle message */}
         <div className="flex items-center justify-center mb-4 text-sm text-amber-600 dark:text-amber-400">

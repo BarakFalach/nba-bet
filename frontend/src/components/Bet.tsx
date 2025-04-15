@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Logo from './Logo';
 import PlaceBet from './PlaceBet';
 import { EnhancedBet } from '@/hooks/useBets';
-import EventType from './EventType'; // Import the EventType component
+import EventType from './EventType';
 import BetCompare from './BetCompare';
 
 interface BetProps {
@@ -13,10 +13,9 @@ interface BetProps {
 
 export default function Bet(props: BetProps) {
   const { bet } = props;
-  const { team1, team2, startTime } = bet?.events;
+  const { team1, team2, startTime, eventType } = bet?.events;
   const [isPlaceBetOpen, setIsPlaceBetOpen] = useState(false);
   const [isBetCompareOpen, setIsBetCompareOpen] = useState(false);
-
 
   const formattedDate = new Intl.DateTimeFormat('en-US', {
     timeZone: 'Asia/Jerusalem',
@@ -32,6 +31,9 @@ export default function Bet(props: BetProps) {
     minute: '2-digit',
     hour12: false,
   }).format(new Date(startTime));
+
+  // Determine if this is a game-type event (game or playin) or a series
+  const isGameType = eventType === 'game' || eventType === 'playin';
 
   return (
     <>
@@ -49,7 +51,7 @@ export default function Bet(props: BetProps) {
           }
         }}
       >
-        <div className="absolute top-0 left-0 z-10">
+        <div className="absolute top-0 left-0 z-2">
           <EventType bet={bet} />
         </div>
         <div className="flex items-center justify-between w-full mb-4">
@@ -76,20 +78,23 @@ export default function Bet(props: BetProps) {
                   You bet on <span className="font-bold">{bet.winnerTeam}</span>
                 </p>
 
-                {/* Win Margin Display */}
-                {bet?.winMargin !== null && (
+                {/* Conditional display based on event type */}
+                {bet?.winMargin !== null && bet.winMargin > 0 && (
                   <p className="text-green-700 dark:text-green-300 text-sm">
-                    Win margin:{' '}
-                    <span className="font-bold">{bet.winMargin} points</span>
+                    {isGameType ? (
+                      <>Win margin: <span className="font-bold">{bet.winMargin} points</span></>
+                    ) : (
+                      <>In <span className="font-bold">{bet.winMargin} games</span></>
+                    )}
                   </p>
                 )}
               </div>
             )}
 
-            {/* Only show Points Diff prompt if no team is selected */}
+            {/* Only show prompt if no team is selected */}
             {!bet.winnerTeam && !bet.winMargin && (
               <p className="text-blue-600 dark:text-blue-300 font-semibold text-sm">
-                Set point difference
+                {isGameType ? 'Set point difference' : 'Set series length'}
               </p>
             )}
           </div>
@@ -106,10 +111,10 @@ export default function Bet(props: BetProps) {
       {isPlaceBetOpen && (
         <PlaceBet
           bet={bet}
-          onClose={() => setIsPlaceBetOpen(false)} // Close PlaceBet
+          onClose={() => setIsPlaceBetOpen(false)}
         />
       )}
-       {isBetCompareOpen && (
+      {isBetCompareOpen && (
         <BetCompare
           bet={bet}
           onClose={() => setIsBetCompareOpen(false)}
