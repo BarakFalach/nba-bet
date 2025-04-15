@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { QueryKeys } from '@/lib/constants';
+import { useUser } from './useUser';
 
 interface Betting {
   winnerTeam: string;
@@ -13,6 +14,7 @@ interface PlaceBetArgs {
 
 export const usePlaceBet = () => {
   const queryClient = useQueryClient();
+  const {user} = useUser();
 
   /**
    * Makes an API call to place a bet and updates the local cache
@@ -31,7 +33,7 @@ export const usePlaceBet = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ betId, betting }),
+        body: JSON.stringify({ betId, betting, userId: user?.id }),
       });
 
       if (!response.ok) {
