@@ -41,7 +41,7 @@ function LeaderBoardPage() {
                 const isCurrentUser = entry.email === user?.email;
                 
                 // Determine medal for top 3
-                let medal = null;
+                let medal = <></>;
                 if (index === 0) {
                   medal = <span className="text-yellow-500 text-lg">🥇</span>;
                 } else if (index === 1) {
