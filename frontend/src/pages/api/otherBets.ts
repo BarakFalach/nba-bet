@@ -31,7 +31,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .select(`
         winnerTeam, 
         winMargin,
-        userId
+        userId,
+        pointsGained,
+        pointsGainedWinMargin
       `)
       .eq('eventId', betData.eventId)
       .not('winnerTeam', 'is', null);
@@ -68,7 +70,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         userId: bet.userId,
         name: userData.name,
         winnerTeam: bet.winnerTeam,
-        winMargin: bet.winMargin
+        winMargin: bet.winMargin,
+        pointsGained: bet.pointsGained,
+        pointsGainedWinMargin: bet.pointsGainedWinMargin,
       };
     });
 

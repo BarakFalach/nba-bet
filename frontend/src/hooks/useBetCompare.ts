@@ -7,6 +7,8 @@ export interface UserBet {
   name: string;
   winnerTeam: string;
   winMargin?: number;
+  pointsGained?: number;
+  pointsGainedWinMargin?: number;
 }
 
 interface BetStats {

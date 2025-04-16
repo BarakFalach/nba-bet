@@ -20,10 +20,20 @@ export function useBets() {
   const { data: bets, isLoading, isError } = useQuery({
     queryKey: [QueryKeys.BETS],
     queryFn: () =>  fetchBets(user?.id || ""),
+    select: (data) => {
+      return data.sort((a: EnhancedBet, b: EnhancedBet) => {
+        const dateA = new Date(a.events.startTime);
+        const dateB = new Date(b.events.startTime);
+        return dateA.getTime() - dateB.getTime();
+      }
+      )
+    }
   });
 
+
+
   const unplacedBets = bets?.filter((bet: EnhancedBet) => 
-    bet.winnerTeam === null && bet.winMargin === null && bet.result === null
+    bet.winnerTeam === null && bet.winMargin === null && bet.result === null && bet.events.round === "playin"
   )
 
   const placedBets = bets?.filter((bet: EnhancedBet) =>
@@ -45,6 +55,4 @@ export function useBets() {
     isLoading,
     isError,
   };
-
-  
 }
