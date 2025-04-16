@@ -3,8 +3,13 @@ from datetime import datetime, timezone
 from dateutil import parser
 from nba_api.live.nba.endpoints import scoreboard
 from nba_api.live.nba.endpoints import boxscore
-from nba_api.stats.endpoints import playoffpicture
+from nba_api.stats.endpoints import playoffpicture, teamdetails
 import hashlib
+
+def getTeamName(teamId):
+    deets = teamdetails.TeamDetails(team_id=teamId)
+    team_data = deets.get_dict()
+    return team_data["resultSets"][0]["rowSet"][0][2]
 
 def getGameInfoByGameId(gameId: str):
     try:
@@ -81,17 +86,21 @@ def getSeries():
 
     for conference in [east, west]:
         for series in conference:
-            high_seed_team = series[2]
-            low_seed_team = series[5]
+            
+            # get team names from team id
+            high_seed_team_name = getTeamName(series[3])
+            low_seed_team_name = getTeamName(series[6])
+
+            # gather scores
             team_1_score = series[7]
             team_2_score = series[8]
-
-            generatedID = generate_id(high_seed_team, low_seed_team)
+            
+            generatedID = generate_id(high_seed_team_name, low_seed_team_name)
 
             event_data = {
                 "id": generatedID,
-                "team1": high_seed_team,
-                "team2": low_seed_team,
+                "team1": high_seed_team_name,
+                "team2": low_seed_team_name,
                 "eventType": "series",
                 # "team1Score": team_1_score,
                 # "team2Score": team_2_score
