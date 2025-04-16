@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { EnhancedBet } from '@/hooks/useBets';
 import Logo from './Logo';
-import { ChartBarIcon } from '@heroicons/react/24/outline';
+import { ChartBarIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import ResolvedBetCompare from './ResolvedBetCompare';
 
 interface ResolvedBetProps {
@@ -9,7 +9,7 @@ interface ResolvedBetProps {
 }
 
 export default function ResolvedBet({ bet }: ResolvedBetProps) {
-  const [showCompareModal, setShowCompareModal] = useState(false);
+  const [showCompare, setShowCompare] = useState(false);
   
   const { 
     events: { 
@@ -49,11 +49,11 @@ export default function ResolvedBet({ bet }: ResolvedBetProps) {
 
   function renderGameResult() {
     return (
-      <>
-        <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden ${isCorrect ? 'border-l-4 border-green-500' : ''}`}>
+      <div className="overflow-hidden shadow-md rounded-xl">
+        <div className={`bg-white dark:bg-gray-800 ${!showCompare && 'rounded-xl'} ${showCompare && 'rounded-t-xl'} ${isCorrect ? 'border-l-4 border-green-500' : ''}`}>
           {/* Header - Show date and points earned */}
-          <div className="bg-gray-50 dark:bg-gray-750 px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-            <span className="text-sm text-gray-500 dark:text-gray-400">{formattedDate}</span>
+          <div className="dark:bg-gray-600 bg-gray-50 dark:bg-gray-750 px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+            <span className="text-sm text-gray-500 dark:text-gray-100">{formattedDate}</span>
             <div className="flex items-center">
               <span className="text-sm font-medium mr-2">Points earned:</span>
               <span className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-xs font-medium px-2.5 py-0.5 rounded">
@@ -100,21 +100,30 @@ export default function ResolvedBet({ bet }: ResolvedBetProps) {
             {/* Compare button */}
             <div className="mt-4 flex justify-center">
               <button
-                onClick={() => setShowCompareModal(true)}
+                onClick={() => setShowCompare(!showCompare)}
                 className="flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
-                <ChartBarIcon className="h-4 w-4 mr-1" />
-                Compare with others
+                {showCompare ? (
+                  <>
+                    <ChevronUpIcon className="h-4 w-4 mr-1" />
+                    Hide comparison
+                  </>
+                ) : (
+                  <>
+                    <ChartBarIcon className="h-4 w-4 mr-1" />
+                    Compare with others
+                  </>
+                )}
               </button>
             </div>
           </div>
         </div>
         
-        {/* ResolvedBetCompare Modal */}
-        {showCompareModal && (
-          <ResolvedBetCompare bet={bet} onClose={() => setShowCompareModal(false)} />
+        {/* Expanded comparison section */}
+        {showCompare && (
+          <ResolvedBetCompare bet={bet} onCollapse={() => setShowCompare(false)} />
         )}
-      </>
+      </div>
     );
   }
 
@@ -124,8 +133,8 @@ export default function ResolvedBet({ bet }: ResolvedBetProps) {
     const team2Wins = 2; // This should come from the actual data
     
     return (
-      <>
-        <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden ${isCorrect ? 'border-l-4 border-green-500' : ''}`}>
+      <div className="overflow-hidden shadow-md rounded-xl">
+        <div className={`bg-white dark:bg-gray-800 ${!showCompare && 'rounded-xl'} ${showCompare && 'rounded-t-xl'} ${isCorrect ? 'border-l-4 border-green-500' : ''}`}>
           {/* Header */}
           <div className="bg-gray-50 dark:bg-gray-750 px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
             <span className="text-sm text-gray-500 dark:text-gray-400">Series Result</span>
@@ -195,21 +204,30 @@ export default function ResolvedBet({ bet }: ResolvedBetProps) {
             {/* Compare button */}
             <div className="flex justify-center">
               <button
-                onClick={() => setShowCompareModal(true)}
+                onClick={() => setShowCompare(!showCompare)}
                 className="flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
-                <ChartBarIcon className="h-4 w-4 mr-1" />
-                Compare with others
+                {showCompare ? (
+                  <>
+                    <ChevronUpIcon className="h-4 w-4 mr-1" />
+                    Hide comparison
+                  </>
+                ) : (
+                  <>
+                    <ChartBarIcon className="h-4 w-4 mr-1" />
+                    Compare with others
+                  </>
+                )}
               </button>
             </div>
           </div>
         </div>
         
-        {/* ResolvedBetCompare Modal */}
-        {showCompareModal && (
-          <ResolvedBetCompare bet={bet} onClose={() => setShowCompareModal(false)} />
+        {/* Expanded comparison section */}
+        {showCompare && (
+          <ResolvedBetCompare bet={bet} onCollapse={() => setShowCompare(false)} />
         )}
-      </>
+      </div>
     );
   }
 }

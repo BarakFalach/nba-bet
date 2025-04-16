@@ -20,7 +20,7 @@ function UpcomingBetsPage() {
   const activeBets = activeTab === 'unplaced' ? unplacedBets : placedBets;
 
   return (
-    <div className="flex flex-col items-center justify-top min-h-screen px-4 bg-white dark:bg-black">
+    <div className="flex flex-col items-center justify-top min-h-screen px-4 bg-white dark:bg-gray-900">
       <h1 className="text-3xl font-semibold mt-6 mb-8 text-center text-gray-900 dark:text-gray-100">
         Your Upcoming Bets
       </h1>

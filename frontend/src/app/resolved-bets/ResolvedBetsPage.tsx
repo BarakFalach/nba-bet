@@ -49,7 +49,7 @@ function ResolvedBetsPage() {
   }
 
   return (
-    <div className="flex flex-col items-center min-h-screen px-4 bg-white dark:bg-black">
+    <div className="flex flex-col items-center min-h-screen px-4 bg-white dark:bg-gray-900">
       <h1 className="text-3xl font-semibold mt-6 mb-4 text-center text-gray-900 dark:text-gray-100">
         Resolved Bets
       </h1>

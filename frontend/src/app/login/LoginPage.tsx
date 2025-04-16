@@ -53,7 +53,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-top min-h-screen px-4 bg-white dark:bg-black">
+    <div className="flex flex-col items-center justify-top min-h-screen px-4 bg-white dark:bg-gray-900">
       <div className="w-full max-w-sm p-6 bg-gray-100 dark:bg-gray-900 rounded-2xl shadow-lg">
         <h1 className="text-3xl font-semibold mb-6 text-center text-gray-900 dark:text-gray-100">
           Welcome Back
