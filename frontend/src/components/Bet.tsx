@@ -22,7 +22,6 @@ export default function Bet(props: BetProps) {
     weekday: 'short',
     month: 'short',
     day: '2-digit',
-    year: 'numeric',
   }).format(new Date(startTime));
 
   const formattedTime = new Intl.DateTimeFormat('en-US', {

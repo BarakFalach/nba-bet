@@ -6,8 +6,8 @@ import Link from 'next/link';
 import {
   HomeIcon,
   CalendarIcon,
-  UserIcon,
   TrophyIcon,
+  ClockIcon,
 } from '@heroicons/react/24/outline';
 import { WithProviders } from '@/lib/providers';
 import { usePathname } from 'next/navigation';
@@ -24,6 +24,7 @@ const geistMono = Geist_Mono({
 
 function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const pathname = usePathname();
+  const isHomePage = pathname === '/';
 
   return (
     <html lang="en">
@@ -42,8 +43,6 @@ function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
         <meta name="theme-color" content="#ffffff" />
         <meta name="background-color" content="#ffffff" />
 
-        
-
         {/* Open Graph / Twitter */}
         <meta property="og:title" content="NBA Bet" />
         <meta
@@ -57,8 +56,6 @@ function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
           name="description"
           content="Track your NBA bets with ease and stay updated on upcoming games."
         />
-
-        {/* Open Graph and Twitter Meta Tags omitted for brevity */}
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased pb-0`}
@@ -67,26 +64,33 @@ function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
         <header className="sticky top-0 z-10 bg-gray-800 text-white shadow-md">
           {/* Logo Bar */}
           <div className="px-4 py-3 flex items-center justify-between">
-            <h1 className="text-xl font-bold">NBA Bet</h1>
-            <UserIcon className="h-6 w-6" />
+            {/* Title now links to home */}
+            <Link 
+              href="/" 
+              className={`text-xl font-bold flex items-center ${
+                isHomePage ? 'text-blue-400' : 'text-white hover:text-blue-200'
+              } transition-colors`}
+            >
+              <HomeIcon className={`h-6 w-6 mr-2 ${
+                isHomePage ? 'text-blue-400' : 'text-white'
+              }`} />
+              NBA Bet
+            </Link>
+            
+            {/* User profile link */}
+            {/* <Link
+              href="/profile" 
+              className="flex items-center hover:bg-gray-700 p-1 rounded-lg"
+            >
+              <UserIcon className="h-6 w-6" />
+            </Link> */}
           </div>
 
           {/* Navigation Pills */}
           <div className="flex px-4 pb-2 overflow-x-auto">
             <Link
-              href="/"
-              className={`flex items-center px-4 py-2 rounded-lg transition-colors flex-shrink-0 ${
-                pathname === '/'
-                  ? 'bg-blue-500 text-white'
-                  : 'text-gray-300 hover:bg-gray-700'
-              }`}
-            >
-              <HomeIcon className="h-5 w-5 mr-1" />
-              <span>Home</span>
-            </Link>
-            <Link
               href="/upcoming-bets"
-              className={`flex items-center px-4 py-2 ml-2 rounded-lg transition-colors flex-shrink-0 ${
+              className={`flex items-center px-4 py-2 rounded-lg transition-colors flex-shrink-0 ${
                 pathname?.includes('/upcoming-bets')
                   ? 'bg-blue-500 text-white'
                   : 'text-gray-300 hover:bg-gray-700'
@@ -94,6 +98,17 @@ function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
             >
               <CalendarIcon className="h-5 w-5 mr-1" />
               <span>Bets</span>
+            </Link>
+            <Link
+              href="/resolved-bets"
+              className={`flex items-center px-4 py-2 ml-2 rounded-lg transition-colors flex-shrink-0 ${
+                pathname?.includes('/resolved-bets')
+                  ? 'bg-blue-500 text-white'
+                  : 'text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              <ClockIcon className="h-5 w-5 mr-1" />
+              <span>History</span>
             </Link>
             <Link
               href="/leaderboard"
