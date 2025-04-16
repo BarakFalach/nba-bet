@@ -8,11 +8,15 @@ import { useRouter } from 'next/navigation';
 import { TrophyIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import { CalendarIcon } from '@heroicons/react/24/solid';
 import PageLoader from '@/components/PageLoader';
+import { useState } from 'react';
+import FinalsBet from '@/components/FinalsBet';
 
 function MainPage() {
   const router = useRouter();
   const { user } = useUser();
   const {} = useLeaderBoard();
+  const [showFinalsBetModal, setShowFinalsBetModal] = useState(false);
+
   const { unplacedBets, isLoading } = useBets();
   const { userRank, totalUsers, userScore, topScore, isLoading: isLeaderBoardLoading } = useLeaderBoard();
 
@@ -32,6 +36,12 @@ function MainPage() {
   const handleLeaderboardClick = () => {
     router.push('/leaderboard');
   }
+
+  // const handleFinalsBetClick = () => {
+  //   setShowFinalsBetModal(true);
+  // };
+
+  
 
   if (isLoading || isLeaderBoardLoading) {
     return (
@@ -110,13 +120,19 @@ function MainPage() {
             {finalsBet ? (
               <p className="text-lg font-medium text-gray-800 dark:text-gray-100">{finalsBet}</p>
             ) : (
-              <p className="text-amber-500 dark:text-amber-400 italic text-sm">Not placed yet</p>
+            //   <button
+            //   onClick={handleFinalsBetClick}
+            //   className="text-amber-500 dark:text-amber-400 italic text-sm underline"
+            // >
+            //   Not placed yet
+            // </button>
+            <p className="text-amber-500 dark:text-amber-400 italic text-sm">Not placed yet</p>
             )}
           </div>
           
           {/* MVP Bet */}
           <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Season MVP</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Finals MVP</p>
             {mvpBet ? (
               <p className="text-lg font-medium text-gray-800 dark:text-gray-100">{mvpBet}</p>
             ) : (
@@ -141,6 +157,12 @@ function MainPage() {
           </button>
         </div>
       </div>
+       {/* FinalsBet Modal */}
+       {showFinalsBetModal && (
+        <FinalsBet 
+          onClose={() => setShowFinalsBetModal(false)} 
+        />
+      )}
     </div>
   );
 }

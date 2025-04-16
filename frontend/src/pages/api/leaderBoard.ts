@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   // Step 1: Fetch all bets with userId and points
   const { data: bets, error: betsError } = await supabase
     .from('bets')
-    .select('userId, pointsGained')
+    .select('userId, pointsGained, pointsGainedWinMargin')
 
   if (betsError) return res.status(500).json({ error: betsError.message })
 
@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   const userScores = new Map()
   for (const bet of bets) {
     const uid = bet.userId
-    const points = bet.pointsGained || 0
+    const points = bet.pointsGained + bet.pointsGainedWinMargin
     userScores.set(uid, (userScores.get(uid) || 0) + points)
   }
 

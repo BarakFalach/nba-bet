@@ -8,6 +8,7 @@ export interface Bet {
   eventType: EventType | null;
   id: string; 
   pointsGained: number | null; 
+  pointsGainedWinMargin: number | null;
   result: string | null; 
   userId: number; 
   winMargin: number | null; 

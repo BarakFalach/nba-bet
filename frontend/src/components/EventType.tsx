@@ -1,6 +1,6 @@
 import React from 'react';
 import { EnhancedBet } from '@/hooks/useBets';
-import { roundType, PredictionResultPerType } from '../types/events';
+import { PredictionResultPerType } from '../types/events';
 
 interface EventTypeProps {
   bet: EnhancedBet;
@@ -41,11 +41,16 @@ const EventType: React.FC<EventTypeProps> = ({ bet }) => {
       bgColor = 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
   }
 
-  // Get the normalized round type for score calculation
-  const normalizedRound = round?.toLowerCase() as roundType || 'firstRound';
+  // Get event type indicator
+  let eventTypeIndicator = '';
+  if (eventType === 'game') {
+    eventTypeIndicator = 'G';
+  } else if (eventType === 'series') {
+    eventTypeIndicator = 'S';
+  }
   
   // Get scores for this round type
-  const scoreData = PredictionResultPerType[normalizedRound];
+  const scoreData = PredictionResultPerType[round];
   
   // Filter scores based on event type
   let scores: number[] = [];
@@ -68,6 +73,11 @@ const EventType: React.FC<EventTypeProps> = ({ bet }) => {
     <div className={`inline-flex items-center rounded-full text-xs font-medium shadow-sm ${bgColor}`}>
       <div className="px-2 py-1 border-r border-white/20 dark:border-black/20">
         {label}
+        {eventTypeIndicator && (
+          <span className="ml-1 px-1 py-0.5 bg-white/30 dark:bg-black/20 rounded-full text-xs">
+            {eventTypeIndicator}
+          </span>
+        )}
       </div>
       {scores.length > 0 && (
         <div className="px-2 py-1 flex items-center space-x-1">

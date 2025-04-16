@@ -10,17 +10,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
 
 
-  try {
-    const today = new Date();
-    
+  try {    
     const { data, error } = await supabase
     .from('bets')
     .select(`
       *,
       events:eventId (*)
     `)
-    .gt('closeTime', today.toISOString())
-    .eq('userId', userId);
+    .eq('userId', userId)
 
 
     if (error) {
