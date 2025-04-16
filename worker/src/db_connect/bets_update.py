@@ -108,7 +108,8 @@ def isClosestWinner(supabase_client, gid, uid, winMargin, result, playoff_round,
         return 0
 
     # if exact winMargin
-    if winMargin - b["winMargin"] == 0:
+    print("delta -> ", winMargin - my_wm)
+    if winMargin - my_wm == 0:
         if playoff_round == "playin":
             return 2
         if playoff_round == "firstRound":
@@ -212,7 +213,7 @@ def updateBetsTable(supabase_client, game_data):
                 # winMargin = winMargin * -1  # wrong direction of winMargin
 
 
-            winMargin = game_data.get("team1Score") - game_data.get("team2Score")
+            winMargin = abs(game_data.get("team1Score") - game_data.get("team2Score"))
             playoff_round = game_data["round"]
             event_type = game_data["eventType"]
             pointsGainedWinMargin = isClosestWinner(supabase_client, gid, uid, winMargin, result, playoff_round, event_type) if is_bet_winner else 0
