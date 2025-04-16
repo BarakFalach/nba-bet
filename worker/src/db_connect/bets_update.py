@@ -212,16 +212,15 @@ def updateBetsTable(supabase_client, game_data):
                 # winMargin = winMargin * -1  # wrong direction of winMargin
 
 
-            winMargin = abs(game_data.get("team1Score") - game_data.get("team2Score"))
+            gameWinMargin = abs(game_data.get("team1Score") - game_data.get("team2Score"))
             playoff_round = game_data["round"]
             event_type = game_data["eventType"]
-            pointsGainedWinMargin = isClosestWinner(supabase_client, gid, uid, winMargin, result, playoff_round, event_type) if is_bet_winner else 0
+            pointsGainedWinMargin = isClosestWinner(supabase_client, gid, uid, gameWinMargin, result, playoff_round, event_type) if is_bet_winner else 0
             pointsGained = trigger_function(calc_func, is_bet_winner)
             
         else:
             # print("game data -> ", game_data["id"])
             result = None
-            winMargin = None
             is_bet_winner = None
             pointsGained = None
             pointsGainedWinMargin = None
@@ -231,7 +230,6 @@ def updateBetsTable(supabase_client, game_data):
                 print("\n----------------------\n")
                 print("bet -> ", bet)
                 print("result -> ", result)
-                print("winMargin -> ", winMargin)
                 print("is_bet_winner -> ", is_bet_winner)
                 print("calc_func -> ", calc_func)
                 print("pointsGained -> ", pointsGained)
@@ -244,7 +242,6 @@ def updateBetsTable(supabase_client, game_data):
                 "eventType": game_data["eventType"],
                 "closeTime": game_data["startTime"],
                 "result": result,
-                # "winMargin": winMargin,
                 "pointsGained": pointsGained,
                 "pointsGainedWinMargin": pointsGainedWinMargin,
                 "calcFunc": calc_func
