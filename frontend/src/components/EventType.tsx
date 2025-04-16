@@ -74,7 +74,7 @@ const EventType: React.FC<EventTypeProps> = ({ bet }) => {
       <div className="px-2 py-1 border-r border-white/20 dark:border-black/20">
         {label}
         {eventTypeIndicator && (
-          <span className="ml-1 px-1 py-0.5 bg-white/30 dark:bg-black/20 rounded-full text-xs">
+          <span className="ml-1 px-1 py-0.5 bg-white/30 dark:bg-gray-900/20 rounded-full text-xs">
             {eventTypeIndicator}
           </span>
         )}

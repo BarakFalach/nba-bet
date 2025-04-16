@@ -11,7 +11,7 @@ function LeaderBoardPage() {
   
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-white dark:bg-black">
+      <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-white dark:bg-gray-900">
         <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
         <p className="mt-4 text-gray-600 dark:text-gray-400">Loading scores...</p>
       </div>
@@ -19,7 +19,7 @@ function LeaderBoardPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-top min-h-screen px-4 bg-white dark:bg-black">
+    <div className="flex flex-col items-center justify-top min-h-screen px-4 bg-white dark:bg-gray-900">
       <div className="w-full max-w-2xl space-y-6 pt-4">
         {/* Header */}
         <div className="flex justify-between items-center">
