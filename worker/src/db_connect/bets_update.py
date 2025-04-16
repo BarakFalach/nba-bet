@@ -108,7 +108,6 @@ def isClosestWinner(supabase_client, gid, uid, winMargin, result, playoff_round,
         return 0
 
     # if exact winMargin
-    print("delta -> ", winMargin - my_wm)
     if winMargin - my_wm == 0:
         if playoff_round == "playin":
             return 2
