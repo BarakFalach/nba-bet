@@ -7,17 +7,22 @@ import { withAuth } from '@/lib/withAuth';
 import PageLoader from '@/components/PageLoader';
 
 function UpcomingBetsPage() {
-  const [activeTab, setActiveTab] = useState<'unplaced' | 'placed'>('unplaced');
-  const { isLoading, unplacedBets, placedBets } = useBets();
+  const [activeTab, setActiveTab] = useState<'unplaced' | 'placed' | 'resolved'>('unplaced');
+  const { isLoading, unplacedBets, placedBets, resolvedBets } = useBets();
 
   if (isLoading) {
     return (
-      <PageLoader/>
+      <PageLoader />
     );
   }
 
   // Get the active bets based on the selected tab
-  const activeBets = activeTab === 'unplaced' ? unplacedBets : placedBets;
+  const activeBets =
+    activeTab === 'unplaced'
+      ? unplacedBets
+      : activeTab === 'placed'
+      ? placedBets
+      : resolvedBets;
 
   return (
     <div className="flex flex-col items-center justify-top min-h-screen px-4 bg-white dark:bg-black">
@@ -58,6 +63,21 @@ function UpcomingBetsPage() {
               </span>
             )}
           </button>
+          <button
+            className={`flex-1 py-3 px-4 text-center font-medium transition ${
+              activeTab === 'resolved'
+                ? 'bg-blue-500 text-white'
+                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+            }`}
+            onClick={() => setActiveTab('resolved')}
+          >
+            Resolved Bets
+            {resolvedBets?.length > 0 && (
+              <span className="ml-2 px-2 py-0.5 bg-white dark:bg-gray-700 text-blue-500 dark:text-white text-xs rounded-full">
+                {resolvedBets?.length}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
@@ -68,10 +88,12 @@ function UpcomingBetsPage() {
             <p className="text-gray-600 dark:text-gray-400 text-lg">
               {activeTab === 'unplaced'
                 ? "You don't have any unplaced bets at the moment."
-                : "You haven't placed any bets yet."}
+                : activeTab === 'placed'
+                ? "You haven't placed any bets yet."
+                : "You don't have any resolved bets yet."}
             </p>
             {activeTab === 'placed' && unplacedBets?.length > 0 && (
-              <button 
+              <button
                 className="mt-4 py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition"
                 onClick={() => setActiveTab('unplaced')}
               >
