@@ -83,7 +83,7 @@ const Logo: React.FC<LogoProps> = ({ teamName, size }) => {
   const width = size === "small" ? 32 : size === "medium" ? 48 : 64;
 
   return (
-    <div className="w-16 h-16 flex items-center justify-center bg-transparent rounded-full overflow-hidden">
+    <div className="flex items-center justify-center bg-transparent rounded-full overflow-hidden">
     <Image
       src={logo || nbaLogo}
       alt={`${teamName} logo`}

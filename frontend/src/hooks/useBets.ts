@@ -35,11 +35,11 @@ export function useBets() {
 
 
   const unplacedBets = bets?.filter((bet: EnhancedBet) => 
-    bet.winnerTeam === null && bet.winMargin === null && bet.result === null
+    bet.winnerTeam === null && bet.winMargin === null && bet.result === null && bet.events.status === 1
   )
 
   const placedBets = bets?.filter((bet: EnhancedBet) =>
-    bet.winnerTeam !== null && bet.winMargin !== null && bet.result === null
+    bet.winnerTeam !== null && bet.winMargin !== null && bet.result === null && bet.events.status === 1
   )
 
   const resolvedBets = bets?.filter((bet: EnhancedBet) => 
@@ -52,7 +52,7 @@ export function useBets() {
   return {
     unplacedBets : unplacedBets || [],    
     placedBets : placedBets || [],
-    resolvedBets: resolvedBets || [],
+    resolvedBets: resolvedBets?.reverse() || [],
     currentlyActiveBets: currentlyActiveBets || [],
     isLoading,
     isError,

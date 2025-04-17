@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { supabase } from '@/lib/supabaseClient'; // Adjust the import path to your Supabase client
+import { supabase } from '@/lib/supabaseClient';
 
 interface Betting {
   winnerTeam: string;
@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // First, fetch bet details to get event information
+    // First, fetch bet details to get event information including startTime
     const { data: betData, error: betError } = await supabase
       .from('bets')
       .select(`
@@ -33,7 +33,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           team1,
           team2,
           eventType,
-          round
+          round,
+          startTime
         )
       `)
       .eq('id', betId)
@@ -45,6 +46,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!betData) {
       return res.status(404).json({ error: 'Bet not found' });
+    }
+
+    // Check if the event has already started
+    const startTime = new Date(betData.events.startTime);
+    const currentTime = new Date();
+    
+    if (currentTime > startTime) {
+      return res.status(403).json({ 
+        error: 'Betting closed', 
+        message: 'This event has already started. Betting is no longer available.'
+      });
     }
 
     // Update the database with the new betting data
