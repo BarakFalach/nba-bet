@@ -73,14 +73,14 @@ const teamLogos: Record<nbaTeams, any> = {
 
 interface LogoProps {
   teamName: string;
-  size?: "small" | "medium" | "large";
+  size?: "xsmall" | "small" | "medium" | "large";
 }
 
 const Logo: React.FC<LogoProps> = ({ teamName, size }) => {
   
   const logo = teamLogos[teamName.replace(/\s+/g, '')]; 
-  const height = size === "small" ? 32 : size === "medium" ? 48 : 64;
-  const width = size === "small" ? 32 : size === "medium" ? 48 : 64;
+  const height = size === "xsmall" ? 24 : size === "small" ? 32 : size === "medium" ? 48 : 64;
+  const width = size === "xsmall" ? 24 : size === "small" ? 32 : size === "medium" ? 48 : 64;
 
   return (
     <div className="flex items-center justify-center bg-transparent rounded-full overflow-hidden">

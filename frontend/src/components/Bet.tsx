@@ -6,6 +6,7 @@ import PlaceBet from './PlaceBet';
 import { EnhancedBet } from '@/hooks/useBets';
 import EventType from './EventType';
 import BetCompare from './BetCompare';
+import { ChartBarIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 
 interface BetProps {
   bet: EnhancedBet;
@@ -15,7 +16,7 @@ export default function Bet(props: BetProps) {
   const { bet } = props;
   const { team1, team2, startTime, eventType } = bet?.events;
   const [isPlaceBetOpen, setIsPlaceBetOpen] = useState(false);
-  const [isBetCompareOpen, setIsBetCompareOpen] = useState(false);
+  const [showCompare, setShowCompare] = useState(false);
 
   const formattedDate = new Intl.DateTimeFormat('en-US', {
     timeZone: 'Asia/Jerusalem',
@@ -35,18 +36,18 @@ export default function Bet(props: BetProps) {
   const isGameType = eventType === 'game' || eventType === 'playin';
 
   return (
-    <>
+    <div className="overflow-hidden shadow-lg rounded-xl max-w-md w-full">
       <div
-        className={`flex flex-col items-center justify-center p-4 rounded-2xl shadow-lg max-w-md w-full cursor-pointer relative ${
+        className={`flex flex-col items-center justify-center p-4 ${
+          showCompare ? 'rounded-t-xl' : 'rounded-xl'
+        } ${
           bet.winnerTeam
-            ? 'bg-gray-100 dark:bg-gray-900' // Default background for placed bets
-            : 'bg-blue-100 dark:bg-blue-900 border-2 border-blue-500' // Highlight for unplaced bets
+            ? 'bg-white dark:bg-gray-800' // Default background for placed bets
+            : 'bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-500' // Highlight for unplaced bets
         }`}
         onClick={() => {
           if (bet.winnerTeam === null) {
             setIsPlaceBetOpen(true);
-          } else {
-            setIsBetCompareOpen(true);
           }
         }}
       >
@@ -104,7 +105,37 @@ export default function Bet(props: BetProps) {
             </div>
           </div>
         </div>
+
+        {/* Only show compare button if bet is placed */}
+        {bet.winnerTeam && (
+          <div className="mt-2 flex justify-center">
+            <button
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent triggering parent click
+                setShowCompare(!showCompare);
+              }}
+              className="flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            >
+              {showCompare ? (
+                <>
+                  <ChevronUpIcon className="h-4 w-4 mr-1" />
+                  Hide comparison
+                </>
+              ) : (
+                <>
+                  <ChartBarIcon className="h-4 w-4 mr-1" />
+                  Compare with others
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* Expanded comparison section */}
+      {showCompare && bet.winnerTeam && (
+        <BetCompare bet={bet} onCollapse={() => setShowCompare(false)} />
+      )}
 
       {/* PlaceBet Overlay */}
       {isPlaceBetOpen && (
@@ -113,12 +144,6 @@ export default function Bet(props: BetProps) {
           onClose={() => setIsPlaceBetOpen(false)}
         />
       )}
-      {isBetCompareOpen && (
-        <BetCompare
-          bet={bet}
-          onClose={() => setIsBetCompareOpen(false)}
-        />
-      )}
-    </>
+    </div>
   );
 }
