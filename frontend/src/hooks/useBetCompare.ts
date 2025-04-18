@@ -23,6 +23,7 @@ interface BetStats {
 interface BetCompareResult {
   betId: string;
   otherBets: UserBet[];
+  betsWithoutUser: UserBet[];
   isLoading: boolean;
   error: Error | null;
   stats: BetStats;
@@ -57,6 +58,17 @@ export function useBetCompare(betId: string, team1: string, team2: string): BetC
     enabled: !!betId,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
+
+  const betsWithoutUser = user?.id 
+  ? otherBets.filter(bet => bet.userId !== user.id)
+  : otherBets;
+
+// Sort betsWithoutUser by total points earned (descending)
+const sortedBetsWithoutUser = [...betsWithoutUser].sort((a, b) => {
+  const totalPointsA = (a.pointsGained || 0) + (a.pointsGainedWinMargin || 0);
+  const totalPointsB = (b.pointsGained || 0) + (b.pointsGainedWinMargin || 0);
+  return totalPointsB - totalPointsA; // Descending order
+});
 
   // Calculate statistics based on fetched data
   const calculateStats = (): BetStats => {
@@ -100,6 +112,7 @@ export function useBetCompare(betId: string, team1: string, team2: string): BetC
   return {
     betId,
     otherBets,
+    betsWithoutUser: sortedBetsWithoutUser,
     isLoading,
     error: error as Error | null,
     stats,

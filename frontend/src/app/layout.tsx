@@ -40,8 +40,15 @@ function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
         <link rel="manifest" href="/manifest.json" />
 
         <link rel="apple-touch-icon" href="/icon.png" />
-        <meta name="theme-color" content="#ffffff" />
         <meta name="background-color" content="#ffffff" />
+
+        {/* PWA color meta tags */}
+        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#101828" />
+        
+        {/* iOS status bar style */}
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
 
         {/* Open Graph / Twitter */}
         <meta property="og:title" content="NBA Bet" />

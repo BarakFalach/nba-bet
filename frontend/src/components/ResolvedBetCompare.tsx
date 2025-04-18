@@ -1,7 +1,6 @@
 'use client';
 
 import { CheckIcon, XMarkIcon as CrossIcon } from '@heroicons/react/24/outline';
-import Logo from './Logo';
 import { EnhancedBet } from '@/hooks/useBets';
 import useBetCompare from '@/hooks/useBetCompare';
 
@@ -17,6 +16,7 @@ export default function ResolvedBetCompare({ bet, onCollapse }: ResolvedBetCompa
 
   const { 
     otherBets, 
+    betsWithoutUser,
     isLoading, 
   } = useBetCompare(bet.id, team1, team2);
 
@@ -94,7 +94,7 @@ export default function ResolvedBetCompare({ bet, onCollapse }: ResolvedBetCompa
         {/* Other users' bets */}
         <div>
           <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {otherBets.length > 0 ? "Other Users' Bets" : 'No other bets placed'}
+            {betsWithoutUser.length > 0 ? "Other Users' Bets" : 'No other bets placed'}
           </h3>
           
           {isLoading ? (
@@ -103,12 +103,12 @@ export default function ResolvedBetCompare({ bet, onCollapse }: ResolvedBetCompa
             </div>
           ) : (
             <div className="max-h-60 overflow-y-auto rounded-lg bg-white dark:bg-gray-750 shadow-sm">
-              {otherBets.length === 0 ? (
+              {betsWithoutUser.length === 0 ? (
                 <div className="py-4 text-center text-gray-500 dark:text-gray-400">
                   No one else placed bets on this event
                 </div>
               ) : (
-                otherBets.map((userBet, index) => {
+                betsWithoutUser.map((userBet, index) => {
                   const isCorrect = userBet.winnerTeam === actualWinner;
                   
                   return (
@@ -118,9 +118,7 @@ export default function ResolvedBetCompare({ bet, onCollapse }: ResolvedBetCompa
                     >
                       <div className="flex-1">
                         <div className="flex items-center">
-                          <div className="h-6 w-6 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-xs font-medium text-gray-800 dark:text-gray-200">
-                            {userBet.name?.charAt(0) || '?'}
-                          </div>
+
                           <span className="ml-2 text-sm font-medium text-gray-800 dark:text-gray-200">{userBet.name}</span>
                           
                           {isCorrect ? (
@@ -131,9 +129,6 @@ export default function ResolvedBetCompare({ bet, onCollapse }: ResolvedBetCompa
                         </div>
                       </div>
                       <div className="flex items-center">
-                        <div className="flex flex-col items-center">
-                          <Logo teamName={userBet.winnerTeam} size="small" />
-                        </div>
                         
                         {userBet.winMargin != null && userBet.winMargin > 0 && (
                           <div className={`ml-2 text-xs px-2 py-1 rounded ${

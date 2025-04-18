@@ -19,6 +19,7 @@ export default function BetCompare({ bet, onClose }: BetCompareProps) {
   const { 
     otherBets, 
     isLoading, 
+    betsWithoutUser,
   } = useBetCompare(bet.id, team1, team2);
 
 
@@ -122,7 +123,7 @@ export default function BetCompare({ bet, onClose }: BetCompareProps) {
           {/* Other users' bets */}
           <div>
             <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
-              {otherBets.length > 0 ? "Other Users' Bets" : 'No other bets yet'}
+              {betsWithoutUser.length > 0 ? "Other Users' Bets" : 'No other bets yet'}
             </h3>
             
             {isLoading ? (
@@ -131,7 +132,7 @@ export default function BetCompare({ bet, onClose }: BetCompareProps) {
               </div>
             ) : (
               <div className="max-h-60 overflow-y-auto">
-                {otherBets.map((userBet, index) => (
+                {betsWithoutUser.map((userBet, index) => (
                   <div 
                     key={index}
                     className="flex items-center py-2 border-b border-gray-100 dark:border-gray-800 last:border-0"

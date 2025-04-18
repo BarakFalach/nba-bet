@@ -5,13 +5,22 @@
   --foreground: #171717;
   --font-sans: var(--font-geist-sans), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
+  --status-bar-background: #ffffff;
+  --theme-color: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #101828;
     --foreground: #ededed;
+    --status-bar-background: #101828;
+    --theme-color: #101828;
   }
+}
+
+/* Add smooth transitions for theme changes */
+html {
+  transition: background-color 0.3s ease;
 }
 
 body {
@@ -22,8 +31,42 @@ body {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 button {
   font-family: inherit;
+}
+
+/* Add these to support status bar color transitions */
+@media (display-mode: standalone) {
+  html {
+    background-color: var(--status-bar-background);
+  }
+}
+
+@keyframes slideDown {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.3s ease-out forwards;
+}
+
+@keyframes squeeze {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+  75% { transform: scale(0.97); }
+  100% { transform: scale(0.95); }
+}
+
+.animate-squeeze {
+  animation: squeeze 0.4s ease-out forwards;
 }

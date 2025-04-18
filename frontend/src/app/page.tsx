@@ -10,24 +10,30 @@ import { CalendarIcon } from '@heroicons/react/24/solid';
 import PageLoader from '@/components/PageLoader';
 import { useState } from 'react';
 import FinalsBet from '@/components/FinalsBet';
+import { useFinalsBet } from '@/hooks/useFinalsBet';
+import Logo from '@/components/Logo';
 
 function MainPage() {
   const router = useRouter();
   const { user } = useUser();
-  const {} = useLeaderBoard();
   const [showFinalsBetModal, setShowFinalsBetModal] = useState(false);
+  const { finalsBetTeam: finalsBet } = useFinalsBet();
 
   const { unplacedBets, isLoading } = useBets();
-  const { userRank, totalUsers, userScore, topScore, isLoading: isLeaderBoardLoading } = useLeaderBoard();
+  const {
+    userRank,
+    totalUsers,
+    userScore,
+    topScore,
+    isLoading: isLeaderBoardLoading,
+  } = useLeaderBoard();
 
   const displayName = user?.user_metadata?.displayName || 'Player';
   const pointsBehindLeader = topScore - userScore;
-  
-  const completionPercentage = ((userScore) / (topScore)) * 100;
-  
-  const finalsBet = ""
-  
-  const mvpBet = ""
+
+  const completionPercentage = (userScore / topScore) * 100;
+
+  const mvpBet = '';
 
   const handleGoToUpcomingBets = () => {
     router.push('/upcoming-bets');
@@ -35,72 +41,86 @@ function MainPage() {
 
   const handleLeaderboardClick = () => {
     router.push('/leaderboard');
-  }
+  };
 
-  // const handleFinalsBetClick = () => {
-  //   setShowFinalsBetModal(true);
-  // };
-
-  
+  const handleFinalsBetClick = () => {
+    setShowFinalsBetModal(true);
+  };
 
   if (isLoading || isLeaderBoardLoading) {
-    return (
-      <PageLoader/>
-    );
+    return <PageLoader />;
   }
 
   return (
     <div className="flex flex-col items-center justify-top min-h-screen px-4 dark:bg-gray-900">
-    <div className="w-full max-w-2xl space-y-6 pt-4">
-      {/* User Welcome Section - Updated design */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 text-left">
-        <div className="flex items-center space-x-4">
-          
-          {/* Welcome Text */}
-          <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-              Hi, <span className="text-blue-600 dark:text-blue-400">{displayName}</span>
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Here is your betting dashboard for the 2025 season
-            </p>
+      <div className="w-full max-w-2xl space-y-6 pt-4">
+        {/* User Welcome Section - Updated design */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 text-left">
+          <div className="flex items-center space-x-4">
+            {/* Welcome Text */}
+            <div>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                Hi,{' '}
+                <span className="text-blue-600 dark:text-blue-400">
+                  {displayName}
+                </span>
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                Here is your betting dashboard for the 2025 season
+              </p>
+            </div>
           </div>
         </div>
-      </div>
-        
+
         {/* Score & Ranking Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4" onClick={handleLeaderboardClick}>
+        <div
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4"
+          onClick={handleLeaderboardClick}
+        >
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center">
               <ChartBarIcon className="h-5 w-5 mr-2" />
               Your Stats
             </h2>
-            <span className="text-sm text-gray-500 dark:text-gray-400">Season 2025</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Season 2025
+            </span>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
-              <p className="text-gray-500 dark:text-gray-400 text-sm">Your Score</p>
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{userScore}</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
+                Your Score
+              </p>
+              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {userScore}
+              </p>
             </div>
-            
+
             <div className="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
               <p className="text-gray-500 dark:text-gray-400 text-sm">Rank</p>
               <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {userRank} <span className="text-sm font-normal text-gray-500">of {totalUsers}</span>
+                {userRank}{' '}
+                <span className="text-sm font-normal text-gray-500">
+                  of {totalUsers}
+                </span>
               </p>
             </div>
           </div>
-          
+
           {/* Points Behind Leader */}
           <div className="mt-4">
             <div className="flex justify-between text-sm mb-1">
-              <span className="text-gray-600 dark:text-gray-400">Points behind leader</span>
-              <span className="font-medium text-gray-700 dark:text-gray-300">{pointsBehindLeader}</span>
+              <span className="text-gray-600 dark:text-gray-400">
+                Points behind leader
+              </span>
+              <span className="font-medium text-gray-700 dark:text-gray-300">
+                {pointsBehindLeader}
+              </span>
             </div>
             <div className="h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-blue-500" 
+              <div
+                className="h-full bg-blue-500"
                 style={{ width: `${completionPercentage}%` }}
               ></div>
             </div>
@@ -113,34 +133,60 @@ function MainPage() {
             <TrophyIcon className="h-5 w-5 mr-2" />
             Your Special Bets
           </h2>
-          
+
           {/* NBA Finals Bet */}
-          <div className="border-b border-gray-200 dark:border-gray-700 pb-3 mb-3">
-            <p className="text-sm text-gray-500 dark:text-gray-400">NBA Finals Champion</p>
-            {finalsBet ? (
-              <p className="text-lg font-medium text-gray-800 dark:text-gray-100">{finalsBet}</p>
-            ) : (
-            //   <button
-            //   onClick={handleFinalsBetClick}
-            //   className="text-amber-500 dark:text-amber-400 italic text-sm underline"
-            // >
-            //   Not placed yet
-            // </button>
-            <p className="text-amber-500 dark:text-amber-400 italic text-sm">Not placed yet</p>
-            )}
-          </div>
-          
+<div className="border-b border-gray-200 dark:border-gray-700 pb-3 mb-3">
+  <p className="text-sm text-gray-500 dark:text-gray-400">
+    NBA Finals Champion
+  </p>
+  {finalsBet ? (
+    <div className="flex items-center justify-between mt-1">
+      <div className="flex items-center">
+        <div className="w-8 h-8 mr-3">
+          <Logo teamName={finalsBet} size="small" />
+        </div>
+        <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
+          {finalsBet}
+        </p>
+      </div>
+      <button
+        onClick={handleFinalsBetClick}
+        className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1 transition-colors"
+        aria-label="Change Finals bet"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+      </button>
+    </div>
+  ) : (
+    <button
+      onClick={handleFinalsBetClick}
+      className="text-amber-500 dark:text-amber-400 italic text-sm underline mt-1 flex items-center"
+    >
+      Not placed yet
+    </button>
+  )}
+</div>
+
           {/* MVP Bet */}
           <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Finals MVP</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Finals MVP
+            </p>
             {mvpBet ? (
-              <p className="text-lg font-medium text-gray-800 dark:text-gray-100">{mvpBet}</p>
+              <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
+                {mvpBet}
+              </p>
             ) : (
-              <p className="text-amber-500 dark:text-amber-400 italic text-sm">Not placed yet</p>
+              <p className="text-amber-500 dark:text-amber-400 italic text-sm">
+                Not placed yet
+              </p>
             )}
           </div>
         </div>
-        
+
         {/* CTA Section */}
         <div className="pt-2">
           <button
@@ -157,11 +203,9 @@ function MainPage() {
           </button>
         </div>
       </div>
-       {/* FinalsBet Modal */}
-       {showFinalsBetModal && (
-        <FinalsBet 
-          onClose={() => setShowFinalsBetModal(false)} 
-        />
+      {/* FinalsBet Modal */}
+      {showFinalsBetModal && (
+        <FinalsBet onClose={() => setShowFinalsBetModal(false)} />
       )}
     </div>
   );

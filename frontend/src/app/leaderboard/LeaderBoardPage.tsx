@@ -38,7 +38,7 @@ function LeaderBoardPage() {
           {leaderboard && leaderboard.length > 0 ? (
             <ul className="divide-y divide-gray-200 dark:divide-gray-700">
               {leaderboard.map((entry, index) => {
-                const isCurrentUser = entry.email === user?.email;
+                const isCurrentUser = entry.email.toLowerCase() === user?.email?.toLowerCase();
                 
                 // Determine medal for top 3
                 let medal = <></>;
