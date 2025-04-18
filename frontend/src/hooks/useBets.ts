@@ -31,12 +31,28 @@ export function useBets() {
       )
     }
   });
+  
+  // Helper function to check if a bet's start time has passed
+  const hasStartTimePassed = (bet: EnhancedBet): boolean => {
+    if (!bet.events.startTime) return false;
+    
+    // Create Date objects for comparison
+    // startTime from API is already in UTC format, so we can directly compare
+    const startTime = new Date(bet.events.startTime);
+    const currentTime = new Date();
+    
+    return currentTime > startTime;
+  };
 
 
 
   const unplacedBets = bets?.filter((bet: EnhancedBet) => 
-    bet.winnerTeam === null && bet.winMargin === null && bet.result === null && bet.events.status === 1
-  )
+    bet.winnerTeam === null && 
+    bet.winMargin === null && 
+    bet.result === null && 
+    bet.events.status === 1 &&
+    !hasStartTimePassed(bet) // Only include bets that haven't started yet
+  );
 
   const placedBets = bets?.filter((bet: EnhancedBet) =>
     bet.winnerTeam !== null && bet.winMargin !== null && bet.result === null && bet.events.status === 1
