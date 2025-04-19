@@ -14,9 +14,6 @@ export const useLeaderBoard = () => {
     enabled: !!userId,
   })
 
-  console.log('Leaderboard data:', leaderboard)
-  console.log('Leaderboard user', user)
-
 
   // Optional: compute rank + userScore for current user
   const totalUsers = leaderboard?.length
