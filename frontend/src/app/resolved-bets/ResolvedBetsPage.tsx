@@ -15,7 +15,7 @@ function ResolvedBetsPage() {
   const [showCompare, setShowCompare] = useState(false);
   
   const { isLoading: isLoadingBets, resolvedBets } = useBets();
-  const { currentUserStats, isLoading: isLoadingStats } = useOverallBetCompare(activeRound);
+  const { isLoading: isLoadingStats } = useOverallBetCompare(activeRound);
 
   // Filter bets by selected round
   const filteredBets = useMemo(() => {
@@ -111,30 +111,6 @@ function ResolvedBetsPage() {
                 </div>
               </div>
               
-              {/* Additional stats from overall stats */}
-              {currentUserStats && !isLoadingStats && (
-                <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
-                  <div className="flex justify-between items-center text-sm">
-                    <div className="flex items-center">
-                      <div className="h-6 w-6 bg-blue-100 dark:bg-blue-900/40 rounded-full flex items-center justify-center mr-2">
-                        <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
-                          {currentUserStats.rank}
-                        </span>
-                      </div>
-                      <span className="text-gray-700 dark:text-gray-300">
-                        Leaderboard Rank
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <span className="text-gray-700 dark:text-gray-300 mr-2">Margin Accuracy</span>
-                      <div className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/40 rounded text-purple-700 dark:text-purple-300 text-xs font-medium">
-                        {currentUserStats.marginAccuracy}%
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
               
               {/* Compare button */}
               <div className="mt-4 flex justify-center">
