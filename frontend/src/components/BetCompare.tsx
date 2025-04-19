@@ -80,28 +80,6 @@ export default function BetCompare({ bet, onCollapse }: BetCompareProps) {
           </div>
         </div>
 
-        {/* Your bet section */}
-        <div className="mb-5 bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg">
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Your Bet</h3>
-          <div className="flex items-center justify-center">
-            <div className="flex flex-1 flex-col items-center">
-              <Logo teamName={bet.winnerTeam!} size="small" />
-              <p className="mt-1 text-sm font-medium">{bet.winnerTeam}</p>
-            </div>
-            
-            {bet.winMargin !== null && bet.winMargin > 0 && (
-              <div className="text-center px-3">
-                <span className="block text-xs text-gray-500 dark:text-gray-400">
-                  {bet.events.eventType === 'game' || bet.events.eventType === 'playin' 
-                    ? 'Win margin' 
-                    : 'In games'}
-                </span>
-                <span className="font-medium">{bet.winMargin}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
         {/* Other users' bets */}
         <div>
           <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
