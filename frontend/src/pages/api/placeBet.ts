@@ -12,15 +12,59 @@ interface PlaceBetArgs {
   userId: string;
 }
 
+// Define log event types for clarity
+enum BetLogEventType {
+  INTERACTION_START = 'interaction_start',
+  PLACEMENT_COMPLETE = 'placement_complete',
+  VALIDATION_FAILURE = 'validation_failure',
+  SERVER_ERROR = 'server_error'
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   const { betId, betting, userId } = req.body as PlaceBetArgs;
+  const timestamp = new Date().toISOString();
+  
+  // Log the start of the interaction
+  const { error: startLogError } = await supabase
+    .from('bets_log')
+    .insert({
+      betId: betId,
+      userId: userId,
+      winnerTeam: betting?.winnerTeam || null,
+      winMargin: betting?.winMargin || null,
+      time: timestamp,
+      logEventType: BetLogEventType.INTERACTION_START,
+      status: 'started',
+    });
+  
+  if (startLogError) {
+    console.error('Error logging bet interaction start:', startLogError);
+  }
 
+  // Validate request data
   if (!betId || !betting || typeof betting !== 'object' || !betting.winnerTeam || !userId) {
-    return res.status(400).json({ error: 'Invalid request. Missing or invalid betId, userId or betting data.' });
+    // Log validation failure
+    await supabase
+      .from('bets_log')
+      .insert({
+        betId: betId || null,
+        userId: userId || null,
+        winnerTeam: betting?.winnerTeam || null,
+        winMargin: betting?.winMargin || null,
+        time: new Date().toISOString(),
+        logEventType: BetLogEventType.VALIDATION_FAILURE,
+        status: 'failed',
+        error: 'Invalid request data',
+      });
+      
+    return res.status(400).json({ 
+      error: 'Invalid request', 
+      message: 'Missing or invalid betId, userId or betting data.' 
+    });
   }
 
   try {
@@ -45,7 +89,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (!betData) {
-      return res.status(404).json({ error: 'Bet not found' });
+      // Log bet not found error
+      await supabase
+        .from('bets_log')
+        .insert({
+          betId: betId,
+          userId: userId,
+          winnerTeam: betting.winnerTeam,
+          winMargin: betting.winMargin || 0,
+          time: new Date().toISOString(),
+          logEventType: BetLogEventType.VALIDATION_FAILURE,
+          status: 'failed',
+          error: 'Bet not found'
+        });
+        
+      return res.status(404).json({ 
+        error: 'Bet not found', 
+        message: 'The specified bet does not exist'
+      });
     }
 
     // Check if the event has already started
@@ -53,6 +114,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const currentTime = new Date();
     
     if (currentTime > startTime) {
+      // Log deadline passed error
+      await supabase
+        .from('bets_log')
+        .insert({
+          betId: betId,
+          userId: userId,
+          winnerTeam: betting.winnerTeam,
+          winMargin: betting.winMargin || 0,
+          time: new Date().toISOString(),
+          logEventType: BetLogEventType.VALIDATION_FAILURE,
+          status: 'failed',
+          error: 'Betting deadline passed',
+        });
+        
       return res.status(403).json({ 
         error: 'Betting closed', 
         message: 'This event has already started. Betting is no longer available.'
@@ -69,8 +144,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw error;
     }
 
-    // Log the bet to bets_log table
-    const { error: logError } = await supabase
+    // Log successful bet placement
+    const { error: completeLogError } = await supabase
       .from('bets_log')
       .insert({
         betId: betId,
@@ -80,20 +155,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         time: new Date().toISOString(),
         team1: betData.events.team1,
         team2: betData.events.team2,
-        eventType: betData.events.eventType,
+        logEventType: BetLogEventType.PLACEMENT_COMPLETE,
+        status: 'completed',
         round: betData.events.round,
-        gameNumber: null, // Assuming you want to set this to null for now
+        eventType: betData.events.eventType,
       });
 
-    if (logError) {
-      console.error('Error logging bet:', logError);
+    if (completeLogError) {
+      console.error('Error logging bet completion:', completeLogError);
       // We don't want to fail the entire request if just the logging fails
-      // So we log the error but still return success
     }
 
     return res.status(200).json({ success: true, data });
   } catch (error: unknown) {
     console.error('Error updating bet:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    
+    // Log server error
+    await supabase
+      .from('bets_log')
+      .insert({
+        betId: betId,
+        userId: userId,
+        winnerTeam: betting.winnerTeam,
+        winMargin: betting.winMargin || 0,
+        time: new Date().toISOString(),
+        logEventType: BetLogEventType.SERVER_ERROR,
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      
+    return res.status(500).json({ 
+      error: 'Internal server error',
+      message: 'Failed to place your bet. Please try again.'
+    });
   }
 }
