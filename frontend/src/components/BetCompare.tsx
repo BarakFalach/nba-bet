@@ -91,7 +91,7 @@ export default function BetCompare({ bet, onCollapse }: BetCompareProps) {
               <div className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-blue-500 dark:border-blue-400 border-t-transparent"></div>
             </div>
           ) : (
-            <div className="max-h-60 overflow-y-auto rounded-lg bg-white dark:bg-gray-750 shadow-sm">
+            <div className="max-h-60 overflow-y-auto rounded-lg bg-white dark:bg-gray-600 shadow-sm">
               {betsWithoutUser.length === 0 ? (
                 <div className="py-4 text-center text-gray-500 dark:text-gray-400">
                   No one else has placed bets on this event yet
