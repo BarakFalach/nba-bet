@@ -1,6 +1,6 @@
 'use client';
 
-import { TrophyIcon, CheckIcon, ChartBarIcon } from '@heroicons/react/24/outline';
+import { CheckIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import useOverallBetCompare from '@/hooks/useOverallBetCompare';
 import { useState, useEffect } from 'react';
 import { roundType } from '../types/events';
@@ -11,7 +11,7 @@ interface OverallBetsCompareProps {
   roundLabel: string;
 }
 
-export default function OverallBetsCompare({ onClose, round, roundLabel }: OverallBetsCompareProps) {
+export default function OverallBetsCompare({ round, roundLabel }: OverallBetsCompareProps) {
   const [, setIsVisible] = useState(false);
   const { 
     allUserStats, 
@@ -44,14 +44,8 @@ export default function OverallBetsCompare({ onClose, round, roundLabel }: Overa
         <div className="flex justify-between items-center mb-3">
           <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center">
             <ChartBarIcon className="h-4 w-4 mr-2 text-blue-500" />
-            {roundLabel} Leaderboard
+            {roundLabel} Statistics
           </h3>
-          <button 
-            onClick={onClose}
-            className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-          >
-            Hide details
-          </button>
         </div>
 
         {/* Current User's Performance */}
@@ -112,10 +106,6 @@ export default function OverallBetsCompare({ onClose, round, roundLabel }: Overa
         )}
 
         <div>
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center">
-            <TrophyIcon className="h-4 w-4 mr-1 text-yellow-500" />
-            Top Performers
-          </h3>
           
           {isLoading ? (
             <div className="py-6 text-center">

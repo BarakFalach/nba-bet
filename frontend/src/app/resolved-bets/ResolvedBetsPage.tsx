@@ -7,7 +7,6 @@ import PageLoader from '@/components/PageLoader';
 import ResolvedBet from '@/components/ResolvedBet';
 import OverallBetsCompare from '@/components/OverallBetsCompare';
 import { roundType } from '../../types/events';
-import useOverallBetCompare from '@/hooks/useOverallBetCompare';
 import { ChartBarIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 
 function ResolvedBetsPage() {
@@ -15,7 +14,6 @@ function ResolvedBetsPage() {
   const [showCompare, setShowCompare] = useState(false);
   
   const { isLoading: isLoadingBets, resolvedBets } = useBets();
-  const { isLoading: isLoadingStats } = useOverallBetCompare(activeRound);
 
   // Filter bets by selected round
   const filteredBets = useMemo(() => {
@@ -89,9 +87,9 @@ function ResolvedBetsPage() {
                     ({roundLabels[activeRound]})
                   </span>
                 </h3>
-                {isLoadingStats && (
+                {/* {isLoadingStats && (
                   <div className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-blue-500 dark:border-blue-400 border-t-transparent"></div>
-                )}
+                )} */}
               </div>
               
               <div className="grid grid-cols-3 gap-4 text-center">
@@ -121,12 +119,12 @@ function ResolvedBetsPage() {
                   {showCompare ? (
                     <>
                       <ChevronUpIcon className="h-4 w-4 mr-1" />
-                      Hide leaderboard
+                      Hide statistics
                     </>
                   ) : (
                     <>
                       <ChartBarIcon className="h-4 w-4 mr-1" />
-                      Compare with others
+                      {`${roundLabels[activeRound]} statistics`}
                     </>
                   )}
                 </button>
