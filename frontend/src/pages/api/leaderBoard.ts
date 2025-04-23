@@ -11,15 +11,45 @@ export default async function handler(req, res) {
 
   if (betsError) return res.status(500).json({ error: betsError.message })
 
+  // Step 1b: Fetch all finals bets with user IDs and team names
+  const { data: finalsBets, error: finalsBetsError } = await supabase
+    .from('finals_bet')
+    .select('userId, finalsBet, pointsGained')
+  
+  if (finalsBetsError) return res.status(500).json({ error: finalsBetsError.message })
+
   // Step 2: Aggregate total points per user
   const userScores = new Map()
-  for (const bet of bets) {
+  const userFinalsBets = new Map() // Store finals bet info per user
+  
+  // Process regular bets
+  for (const bet of bets || []) {
     const uid = bet.userId
-    const points = bet.pointsGained + bet.pointsGainedWinMargin
+    const points = (bet.pointsGained || 0) + (bet.pointsGainedWinMargin || 0)
     userScores.set(uid, (userScores.get(uid) || 0) + points)
   }
+  
+  // Process finals bets
+  for (const finalsBet of finalsBets || []) {
+    const uid = finalsBet.userId
+    // Add points from finals bet (if available)
+    if (finalsBet.pointsGained) {
+      userScores.set(uid, (userScores.get(uid) || 0) + (finalsBet.pointsGained || 0))
+    }
+    // Store the team name for this user's finals bet
+    userFinalsBets.set(uid, finalsBet.finalsBet)
+    
+    // Make sure this user is included in the leaderboard even if they have no other bets
+    if (!userScores.has(uid)) {
+      userScores.set(uid, 0)
+    }
+  }
 
-  const userIds = Array.from(userScores.keys())
+  // Get combined list of all user IDs who have placed any type of bet
+  const userIds = Array.from(new Set([
+    ...userScores.keys(),
+    ...userFinalsBets.keys()
+  ]))
 
   // Step 3: Fetch user names from Users table
   const { data: users, error: usersError } = await supabase
@@ -29,25 +59,28 @@ export default async function handler(req, res) {
 
   if (usersError) return res.status(500).json({ error: usersError.message })
 
-    const uuidToUser = new Map(users.map(u => [u.uuid, { name: u.name, email: u.email }]))
+  const uuidToUser = new Map(users.map(u => [u.uuid, { name: u.name, email: u.email }]))
 
-
-  // Step 4: Build leaderboard list
-  const leaderboard = Array.from(userScores.entries())
-  .map(([uuid, score]) => {
+  // Step 4: Build leaderboard list with finals bet information
+  const leaderboard = userIds.map(uuid => {
     const user = uuidToUser.get(uuid) || { name: 'Unknown', email: '' }
     return {
       name: user.name,
       email: user.email,
-      score,
+      score: userScores.get(uuid) || 0,
       userId: uuid,
+      finalsBet: userFinalsBets.get(uuid) || null
     }
   })
   .sort((a, b) => b.score - a.score)
 
-
-  // Return just name + score for each user
+  // Return user data with score and finals bet
   return res.status(200).json(
-    leaderboard.map(({ name, email, score }) => ({ name, email, score })),
+    leaderboard.map(({ name, email, score, finalsBet }) => ({ 
+      name, 
+      email, 
+      score,
+      finalsBet 
+    })),
   )
 }
