@@ -91,7 +91,6 @@ export default function ResolvedBet({ bet }: ResolvedBetProps) {
               {/* Team 1 */}
               <div className={`flex flex-col items-center ${team1 === actualWinner ? 'font-bold' : ''}`}>
                 <Logo teamName={team1} size="medium" />
-                {/* <span className="mt-1">{team1}</span> */}
                 <span className="text-xl font-bold">{team1Score}</span>
               </div>
 
@@ -115,7 +114,6 @@ export default function ResolvedBet({ bet }: ResolvedBetProps) {
               {/* Team 2 */}
               <div className={`flex flex-col items-center ${team2 === actualWinner ? 'font-bold' : ''}`}>
                 <Logo teamName={team2} size="medium" />
-                {/* <span className="mt-1">{team2}</span> */}
                 <span className="text-xl font-bold">{team2Score}</span>
               </div>
             </div>
