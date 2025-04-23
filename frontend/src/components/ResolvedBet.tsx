@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { EnhancedBet } from '@/hooks/useBets';
 import Logo from './Logo';
 import { ChartBarIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import ResolvedBetCompare from './ResolvedBetCompare';
+import { nbaTeamColors } from '@/lib/teamColors';
 
 interface ResolvedBetProps {
   bet: EnhancedBet;
@@ -20,6 +21,26 @@ export default function ResolvedBet({ bet }: ResolvedBetProps) {
     pointsGainedWinMargin, 
     pointsGained,
   } = bet;
+
+  const team1Color = nbaTeamColors[team1 as keyof typeof nbaTeamColors] || '#3B82F6';
+  const team2Color = nbaTeamColors[team2 as keyof typeof nbaTeamColors] || '#EF4444';
+
+  const withOpacity = (hexColor: string, opacity: number) => {
+      const hex = hexColor.replace('#', '');
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+    };
+  
+    // Create background gradient style
+    const backgroundStyle = useMemo(() => {
+      // For placed bets, use team colors with lower opacity
+      // For unplaced bets, use more prominent colors with blue border
+      return {
+        background: `linear-gradient(135deg, ${withOpacity(team1Color, 0.5)} 0%, ${withOpacity(team1Color, 0.2)} 49%, ${withOpacity(team2Color, 0.2)} 51%, ${withOpacity(team2Color, 0.5)} 100%)`,
+      };
+    }, [bet.winnerTeam, team1Color, team2Color]);
 
   const actualWinner = team1Score > team2Score ? team1 : team2;
 
@@ -47,10 +68,12 @@ export default function ResolvedBet({ bet }: ResolvedBetProps) {
   // Fallback to default game layout if we can't determine type
   return renderGameResult();
 
+  
+
   function renderGameResult() {
     return (
       <div className="overflow-hidden shadow-md rounded-xl">
-        <div className={`bg-white dark:bg-gray-800 ${!showCompare && 'rounded-xl'} ${showCompare && 'rounded-t-xl'} ${isCorrect ? 'border-l-4 border-green-500' : ''}`}>
+        <div style={backgroundStyle} className={`bg-white dark:bg-gray-800 ${!showCompare && 'rounded-xl'} ${showCompare && 'rounded-t-xl'} ${isCorrect ? 'border-l-4 border-green-500' : ''}`}>
           {/* Header - Show date and points earned */}
           <div className="dark:bg-gray-600 bg-gray-50 dark:bg-gray-750 px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
             <span className="text-sm text-gray-500 dark:text-gray-100">{formattedDate}</span>
@@ -67,8 +90,7 @@ export default function ResolvedBet({ bet }: ResolvedBetProps) {
             <div className="flex justify-between items-center">
               {/* Team 1 */}
               <div className={`flex flex-col items-center ${team1 === actualWinner ? 'font-bold' : ''}`}>
-                <Logo teamName={team1} size="small" />
-                <span className="mt-1">{team1}</span>
+                <Logo teamName={team1} size="medium" />
                 <span className="text-xl font-bold">{team1Score}</span>
               </div>
 
@@ -91,8 +113,7 @@ export default function ResolvedBet({ bet }: ResolvedBetProps) {
 
               {/* Team 2 */}
               <div className={`flex flex-col items-center ${team2 === actualWinner ? 'font-bold' : ''}`}>
-                <Logo teamName={team2} size="small" />
-                <span className="mt-1">{team2}</span>
+                <Logo teamName={team2} size="medium" />
                 <span className="text-xl font-bold">{team2Score}</span>
               </div>
             </div>
