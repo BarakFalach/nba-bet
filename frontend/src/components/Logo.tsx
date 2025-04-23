@@ -1,41 +1,37 @@
 import Image from 'next/image';
 
 import { nbaTeams } from '../types/events';
-// Dynamically import all team logosnab
-import hawks from '../lib/icons/hawks.png';
-import celtics from '../lib/icons/celtics.png';
-import nets from '../lib/icons/nets.png';
-import hornets from '../lib/icons/hornets.png';
-import bulls from '../lib/icons/bulls.png';
-import cavaliers from '../lib/icons/cavaliers.png';
-import mavericks from '../lib/icons/mavericks.png';
-import nuggets from '../lib/icons/nuggets.png';
-import pistons from '../lib/icons/pistons.png'; 
-import warriors from '../lib/icons/warriors.png';
-import rockets from '../lib/icons/rockets.png';
-import pacers from '../lib/icons/pacers.png';
-import clippers from '../lib/icons/clippers.png';
-import lakers from '../lib/icons/lakers.png';
-import grizzlies from '../lib/icons/grizzlies.png';
-import heat from '../lib/icons/heat.png';
-import bucks from '../lib/icons/bucks.png';
-import timberwolves from '../lib/icons/timberwolves.png';
-import pelicans from '../lib/icons/pelicans.png';
-import knicks from '../lib/icons/knicks.png';
-import thunder from '../lib/icons/thunder.png';
-import magic from '../lib/icons/magic.png';
-import sixers from '../lib/icons/76ers.png';
-import suns from '../lib/icons/suns.png';
-import blazers from '../lib/icons/trailBlazers.png';
-import kings from '../lib/icons/kings.png';
-import spurs from '../lib/icons/spurs.png';
-import raptors from '../lib/icons/raptors.png';
-import jazz from '../lib/icons/jazz.png';
-import wizards from '../lib/icons/wizards.png';
-import nbaLogo from '../lib/icons/_NBA_logo.png';
-
-
-
+import hawks from '../../public/images/logos/hawks.png';
+import celtics from '../../public/images/logos/celtics.png';
+import nets from '../../public/images/logos/nets.png';
+import hornets from '../../public/images/logos/hornets.png';
+import bulls from '../../public/images/logos/bulls.png';
+import cavaliers from '../../public/images/logos/cavaliers.png';
+import mavericks from '../../public/images/logos/mavericks.png';
+import nuggets from '../../public/images/logos/nuggets.png';
+import pistons from '../../public/images/logos/pistons.png';
+import warriors from '../../public/images/logos/warriors.png';
+import rockets from '../../public/images/logos/rockets.png';
+import pacers from '../../public/images/logos/pacers.png';
+import clippers from '../../public/images/logos/clippers.png';
+import lakers from '../../public/images/logos/lakers.png';
+import grizzlies from '../../public/images/logos/grizzlies.png';
+import heat from '../../public/images/logos/heat.png';
+import bucks from '../../public/images/logos/bucks.png';
+import timberwolves from '../../public/images/logos/timberwolves.png';
+import pelicans from '../../public/images/logos/pelicans.png';
+import knicks from '../../public/images/logos/knicks.png';
+import thunder from '../../public/images/logos/thunder.png';
+import magic from '../../public/images/logos/magic.png';
+import sixers from '../../public/images/logos/76ers.png';
+import suns from '../../public/images/logos/suns.png';
+import blazers from '../../public/images/logos/trailBlazers.png';
+import kings from '../../public/images/logos/kings.png';
+import spurs from '../../public/images/logos/spurs.png';
+import raptors from '../../public/images/logos/raptors.png';
+import jazz from '../../public/images/logos/jazz.png';
+import wizards from '../../public/images/logos/wizards.png';
+import nbaLogo from '../../public/images/logos/_NBA_logo.png';
 
 const teamLogos: Record<nbaTeams, any> = {
   [nbaTeams.Hawks]: hawks,

@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Logo from './Logo';
 import PlaceBet from './PlaceBet';
 import { EnhancedBet } from '@/hooks/useBets';
 import EventType from './EventType';
 import BetCompare from './BetCompare';
 import { ChartBarIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import { nbaTeamColors } from '@/lib/teamColors';
 
 interface BetProps {
   bet: EnhancedBet;
@@ -35,15 +36,44 @@ export default function Bet(props: BetProps) {
   // Determine if this is a game-type event (game or playin) or a series
   const isGameType = eventType === 'game' || eventType === 'playin';
 
+  // Get team colors from the nbaTeamColors map (with fallbacks)
+  const team1Color = nbaTeamColors[team1 as keyof typeof nbaTeamColors] || '#3B82F6';
+  const team2Color = nbaTeamColors[team2 as keyof typeof nbaTeamColors] || '#EF4444';
+
+  // Create a function to add opacity to hex colors
+  const withOpacity = (hexColor: string, opacity: number) => {
+    const hex = hexColor.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  };
+
+  // Create background gradient style
+  const backgroundStyle = useMemo(() => {
+    // For placed bets, use team colors with lower opacity
+    if (bet.winnerTeam) {
+      return {
+        background: `linear-gradient(135deg, ${withOpacity(team1Color, 1)} 0%, ${withOpacity(team1Color, 0.3)} 49%, ${withOpacity(team2Color, 0.3)} 51%, ${withOpacity(team2Color, 1)} 100%)`,
+      };
+    }
+    // For unplaced bets, use more prominent colors with blue border
+    return {
+      background: `linear-gradient(135deg, ${withOpacity(team1Color, 1)} 0%, ${withOpacity(team1Color, 0.2)} 49%, ${withOpacity(team2Color, 0.2)} 51%, ${withOpacity(team2Color, 0.8)} 100%)`,
+      border: '2px solid #3B82F6', // Keep the blue border
+    };
+  }, [bet.winnerTeam, team1Color, team2Color]);
+
   return (
     <div className="overflow-hidden shadow-lg rounded-xl max-w-md w-full">
       <div
-        className={`flex flex-col items-center justify-center p-4 ${
+        style={backgroundStyle}
+        className={`flex flex-col items-center justify-center p-4 relative ${
           showCompare ? 'rounded-t-xl' : 'rounded-xl'
         } ${
           bet.winnerTeam
-            ? 'bg-white dark:bg-gray-800' // Default background for placed bets
-            : 'bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-500' // Highlight for unplaced bets
+            ? 'dark:bg-opacity-90 dark:bg-gray-800' // Dark mode background for placed bets
+            : 'dark:bg-blue-900/30' // Dark mode highlight for unplaced bets
         }`}
         onClick={() => {
           if (bet.winnerTeam === null) {
@@ -51,13 +81,16 @@ export default function Bet(props: BetProps) {
           }
         }}
       >
-        <div className="absolute top-0 left-0 z-2">
+        {/* Create a semi-transparent overlay for better readability in dark mode */}
+        <div className="absolute inset-0 bg-white dark:bg-gray-800 opacity-0 dark:opacity-60 rounded-xl pointer-events-none"></div>
+        
+        <div className="absolute top-0 left-0 z-4">
           <EventType bet={bet} />
         </div>
-        <div className="flex items-center justify-between w-full mb-4">
+        <div className="flex items-center justify-between w-full mb-4 z-4 relative">
           {/* Team Logos */}
           <div className="flex flex-col items-center">
-            <div className="w-16 h-16 flex items-center justify-center rounded-full overflow-hidden bg-transparent">
+            <div className="w-16 h-16 flex items-center justify-center rounded-full overflow-hidden">
               <Logo teamName={team1} />
             </div>
           </div>
@@ -100,7 +133,7 @@ export default function Bet(props: BetProps) {
           </div>
 
           <div className="flex flex-col items-center">
-            <div className="w-16 h-16 flex items-center justify-center rounded-full overflow-hidden bg-transparent">
+            <div className="w-16 h-16 flex items-center justify-center rounded-full overflow-hidden">
               <Logo teamName={team2} />
             </div>
           </div>
@@ -108,13 +141,13 @@ export default function Bet(props: BetProps) {
 
         {/* Only show compare button if bet is placed */}
         {bet.winnerTeam && (
-          <div className="mt-2 flex justify-center">
+          <div className="mt-2 flex justify-center z-4 relative">
             <button
               onClick={(e) => {
                 e.stopPropagation(); // Prevent triggering parent click
                 setShowCompare(!showCompare);
               }}
-              className="flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
             >
               {showCompare ? (
                 <>
