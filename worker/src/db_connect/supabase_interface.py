@@ -10,8 +10,9 @@ def getSupabaseClient():
 
 def supabase_upsert(event_data, table_name):
 
+    print(f"supabase_upsert || table: {table_name} || data -> {event_data}")
+
     # uncomment for testing -- override table updates
-    # print(f"SUPABASE_INTERFACE || table: {table_name} || data -> {event_data}")
     # return 0
 
     return supabase_client.table(table_name).upsert(event_data).execute()
