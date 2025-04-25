@@ -3,7 +3,8 @@ import sys
 sys.path.insert(1, '../src/db_connect')
 
 from nba_api_interface import getTodaysGames, getGameInfoByGameId, getSeries
-from supabase_interface import getEventIdsWhereNullScoreExists, upsert, updateBets, getEventsNotInBetsTable, getEventDataByEventId, getAllEvents
+from supabase_interface import getEventIdsWhereNullScoreExists, supabase_upsert, getEventsNotInBetsTable, getEventDataByEventId, getAllEvents
+from bets_update import updateBetsTable
 
 def lambda_handler(event, context):
     
@@ -11,7 +12,7 @@ def lambda_handler(event, context):
     series = getSeries()
     for series_data in series:
         # Insert or update event data
-        upsert(series_data, 'events')
+        supabase_upsert(series_data, 'events')
 
         # Insert or update bets data per user
         # updateBets(series_data)
@@ -21,7 +22,7 @@ def lambda_handler(event, context):
     # for game_data in todays_games:
         
         # Insert or update event data
-        # upsert(game_data, 'events')
+        # supabase_upsert(game_data, 'events')
 
         # Insert or update bets data per user
         # updateBets(game_data)
@@ -30,18 +31,18 @@ def lambda_handler(event, context):
     missing = getEventsNotInBetsTable()
     for event_id in missing:
         event_data = getEventDataByEventId(event_id)
-        updateBets(event_data)
+        updateBetsTable(event_data)
 
     # Update all events with data - for games
     has_null = getEventIdsWhereNullScoreExists("game")
     for event_id in has_null:
         event_data = getGameInfoByGameId(event_id)
         if event_data != {} and event_data['status'] == 3:      # game is over
-            upsert(event_data, 'events')
+            supabase_upsert(event_data, 'events')
 
     all_events = getAllEvents()
     for event in all_events:
-        updateBets(event)
+        updateBetsTable(event)
 
     return {
         'statusCode': 200,

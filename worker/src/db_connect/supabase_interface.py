@@ -1,16 +1,20 @@
 import os
 import supabase
-from bets_update import updateBetsTable
 
 supabase_url = os.environ.get('SUPABASE_URL')
 supabase_key = os.environ.get('SUPABASE_ANON_KEY')
 supabase_client = supabase.create_client(supabase_url, supabase_key)
 
-def upsert(event_data, table_name):
-    return supabase_client.table(table_name).upsert(event_data).execute()
+def getSupabaseClient():
+    return supabase_client
 
-def updateBets(event_data):
-    updateBetsTable(supabase_client, event_data)
+def supabase_upsert(event_data, table_name):
+
+    # uncomment for testing -- override table updates
+    # print(f"SUPABASE_INTERFACE || table: {table_name} || data -> {event_data}")
+    # return 0
+
+    return supabase_client.table(table_name).upsert(event_data).execute()
 
 def getEventIdsWhereNullScoreExists(eventType: str):
     response = supabase_client.table('events') \

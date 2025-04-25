@@ -1,11 +1,11 @@
 import json 
+from supabase_interface import supabase_upsert, getSupabaseClient
 
-def upsert(supabase_client, event_data, table_name):
-    return supabase_client.table(table_name).upsert(event_data).execute()
+bets_table_name = 'bets'
 
 def getBet(supabase_client, game_id, user_id):
 
-    response = supabase_client.table('bets').select('*').eq('eventId', game_id).eq('userId', user_id).execute()
+    response = supabase_client.table(bets_table_name).select('*').eq('eventId', game_id).eq('userId', user_id).execute()
     try:
         bet = json.loads(response.json())['data'][0]
         return bet
@@ -94,10 +94,11 @@ def f_finals_game(is_bet_winner):
 
 
 ## Points gain calculation Functions based on Win Margin ##
+# This function also wraps the closest winner function for series (WinMargin also acts series bet wager)
 
 def isClosestWinner(supabase_client, gid, uid, winMargin, result, playoff_round, event_type):
     # get all bets for this game
-    response = supabase_client.table('bets').select('*').eq('eventId', gid).execute()
+    response = supabase_client.table(bets_table_name).select('*').eq('eventId', gid).execute()
     all_bets = json.loads(response.json())['data']
 
     # get the win margin for this user
@@ -106,25 +107,20 @@ def isClosestWinner(supabase_client, gid, uid, winMargin, result, playoff_round,
 
     if my_wm == None or my_wm < 0:
         return 0
+    
+    if event_type == "series":
+        return isClosestWinnerSeries(supabase_client, gid, uid, winMargin, result, playoff_round, event_type)
+
+    # else not a series then GAME
 
     # if exact winMargin
     if winMargin - my_wm == 0:
         if playoff_round == "playin":
             return 2
-        if playoff_round == "firstRound":
-            return 2
-        if playoff_round == "secondRound":
-            return 4
         if playoff_round == "conference":
-            if event_type == "game":
-                return 2
-            if event_type == "series":
-                return 4
+            return 2
         if playoff_round == "finals":
-            if event_type == "game":
-                return 2
-            if event_type == "series":
-                return 4
+            return 4
 
     # if not exact winMargin
     # get all the winMargins for this game
@@ -150,16 +146,51 @@ def isClosestWinner(supabase_client, gid, uid, winMargin, result, playoff_round,
         if playoff_round == "playin":
             return 1
         if playoff_round == "conference":
-            if event_type == "game":
-                return 1
+            return 1
         if playoff_round == "finals":
-            if event_type == "game":
-                return 2
+            return 2
     
     return 0
 
 
-def updateBetsTable(supabase_client, game_data):
+def isClosestWinnerSeries(supabase_client, gid, uid, seriesGameBet, result, playoff_round, event_type):
+    # get all bets for this game
+    response = supabase_client.table(bets_table_name).select('*').eq('eventId', gid).execute()
+    all_bets = json.loads(response.json())['data']
+
+    # get the win margin for this user
+    bet = getBet(supabase_client, gid, uid)
+    my_series_game_bet = bet["winMargin"]
+
+    if my_series_game_bet == None or my_series_game_bet < 0:
+        return 0
+
+    # if exact winMargin
+    if seriesGameBet - my_series_game_bet == 0:
+        if playoff_round == "firstRound":
+            return 2
+        if playoff_round == "secondRound":
+            return 4
+        if playoff_round == "conference":
+            return 4
+        if playoff_round == "finals":
+            return 4
+    
+    return 0
+
+
+def updateBetsTable(game_data):
+
+    # TESTING
+
+    # if game_data['id'] == "3037336972":
+    #     print("+++++++++++++++++++++++++++++++++")
+    #     game_data['team1Score'] = 4
+    #     game_data['team2Score'] = 2
+    #     game_data['status'] = 3
+    #     game_data["round"] = "finals"
+
+    supabase_client = getSupabaseClient()
 
     response = supabase_client.table('users').select('uuid').execute()
     user_list=json.loads(response.json())
@@ -192,10 +223,10 @@ def updateBetsTable(supabase_client, game_data):
                 "calcFunc": calc_func
             }
 
-            new_bet = upsert(supabase_client, bet_data, 'bets')
+            new_bet = supabase_upsert(bet_data, bets_table_name)
             bet = json.loads(new_bet.json())['data'][0]
 
-        print(f"game -> {game_data.get("id")}   |||   round  -> {game_data["round"]}   |||   uid -> {uid[0:12]}...   |||   bet -> {bet["id"]}")
+        # print(f"game -> {game_data.get("id")}   |||   round  -> {game_data["round"]}   |||   uid -> {uid[0:12]}...   |||   bet -> {bet["id"]}")
 
         # game is over and can calculate points
         if game_data["status"] == 3:
@@ -213,6 +244,11 @@ def updateBetsTable(supabase_client, game_data):
 
 
             gameWinMargin = abs(game_data.get("team1Score") - game_data.get("team2Score"))
+
+            if game_data["eventType"] == "series":
+                # if series then we want how many games were played total
+                gameWinMargin = abs(game_data.get("team1Score") + game_data.get("team2Score"))
+
             playoff_round = game_data["round"]
             event_type = game_data["eventType"]
             pointsGainedWinMargin = isClosestWinner(supabase_client, gid, uid, gameWinMargin, result, playoff_round, event_type) if is_bet_winner else 0
@@ -249,50 +285,13 @@ def updateBetsTable(supabase_client, game_data):
         
         # print("bet_data  -> ", bet_data)
         
-        response = upsert(supabase_client, bet_data, 'bets')
+        response = supabase_upsert(bet_data, bets_table_name)
         # if game_data["status"] == 1:
         #     print("updating bet -> ", response)
 
     # if it does not exist
     # create for each user and set the game, result and winMargin
 
-
-
-
-
-
-    # for user in uids:
-    #     gid = game_data["id"]
-    #     uid = user['id']
-        
-    #     result = game_data["team1"] if game_data["team1Score"] > game_data["team2Score"] else game_data["team2"]
-    #     winMargin = abs(game_data["team1Score"] - game_data["team2Score"])
-
-    #     if isBetExist(supabase_client, gid, uid, all_bets):
-
-            
-    #         is_bet_winner = True if game_data["team1"] == result else False
-    #         # print("updating")
-    #         bet_data = {
-    #             "eventId": gid,
-    #             "userId": int(uid),
-    #             "eventType": game_data["eventType"],
-    #             "closeTime": game_data["startTime"],
-    #             "result": result,
-    #             "winMargin": winMargin
-    #         }
-    #         response = upsert(supabase_client, bet_data, 'bets')
-        
-    #     # if bet not exist then create on for each user in UserList
-    #     if not isBetExist(supabase_client, gid, uid, all_bets):
-    #         # print("adding new")
-    #         bet_data = {
-    #             "eventId": gid,
-    #             "userId": int(uid),
-    #             "eventType": game_data["eventType"],
-    #             "closeTime": game_data["startTime"]
-    #         }
-    #         response = upsert(supabase_client, bet_data, 'bets')
 
     return {
         'statusCode': 200,
