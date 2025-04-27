@@ -9,10 +9,10 @@ from bets_update import updateBetsTable
 def lambda_handler(event, context):
     
     # get series data
-    series = getSeries()
-    for series_data in series:
+    # series = getSeries()
+    # for series_data in series:
         # Insert or update event data
-        supabase_upsert(series_data, 'events')
+        # supabase_upsert(series_data, 'events')
 
         # Insert or update bets data per user
         # updateBets(series_data)
