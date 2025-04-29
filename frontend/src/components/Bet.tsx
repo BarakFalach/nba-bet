@@ -40,29 +40,28 @@ export default function Bet(props: BetProps) {
   const team1Color = nbaTeamColors[team1 as keyof typeof nbaTeamColors] || '#3B82F6';
   const team2Color = nbaTeamColors[team2 as keyof typeof nbaTeamColors] || '#EF4444';
 
-  // Create a function to add opacity to hex colors
   const withOpacity = (hexColor: string, opacity: number) => {
-    const hex = hexColor.replace('#', '');
-    const r = parseInt(hex.substring(0, 2), 16);
-    const g = parseInt(hex.substring(2, 4), 16);
-    const b = parseInt(hex.substring(4, 6), 16);
-    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-  };
-
-  // Create background gradient style
-  const backgroundStyle = useMemo(() => {
-    // For placed bets, use team colors with lower opacity
-    if (bet.winnerTeam) {
-      return {
-        background: `linear-gradient(135deg, ${withOpacity(team1Color, 1)} 0%, ${withOpacity(team1Color, 0.3)} 49%, ${withOpacity(team2Color, 0.3)} 51%, ${withOpacity(team2Color, 1)} 100%)`,
+        const hex = hexColor.replace('#', '');
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
       };
-    }
-    // For unplaced bets, use more prominent colors with blue border
-    return {
-      background: `linear-gradient(135deg, ${withOpacity(team1Color, 1)} 0%, ${withOpacity(team1Color, 0.2)} 49%, ${withOpacity(team2Color, 0.2)} 51%, ${withOpacity(team2Color, 0.8)} 100%)`,
-      border: '2px solid #3B82F6', // Keep the blue border
-    };
-  }, [bet.winnerTeam, team1Color, team2Color]);
+    
+      // Create background gradient style
+      const backgroundStyle = useMemo(() => {
+        // For placed bets, use team colors with lower opacity
+        // For unplaced bets, use more prominent colors with blue border
+        if (bet.winnerTeam) {
+          return {
+            background: `linear-gradient(135deg, ${withOpacity(team1Color, 0.5)} 0%, ${withOpacity(team1Color, 0.2)} 49%, ${withOpacity(team2Color, 0.2)} 51%, ${withOpacity(team2Color, 0.5)} 100%)`,
+          };
+        } 
+        return {
+          background: `linear-gradient(135deg, ${withOpacity(team1Color, 0.5)} 0%, ${withOpacity(team1Color, 0.2)} 49%, ${withOpacity(team2Color, 0.2)} 51%, ${withOpacity(team2Color, 0.5)} 100%)`,
+          border: '2px solid #3B82F6', // Keep the blue border
+        }
+      }, [bet.winnerTeam, team1Color, team2Color]);
 
   return (
     <div className="overflow-hidden shadow-lg rounded-xl max-w-md w-full">

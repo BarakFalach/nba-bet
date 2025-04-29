@@ -5,6 +5,7 @@ import { withAuth } from '@/lib/withAuth';
 import { useUser } from '@/hooks/useUser';
 import { TrophyIcon, ArrowTrendingUpIcon, StarIcon } from '@heroicons/react/24/outline';
 import Logo from '@/components/Logo';
+import { nbaTeamColors } from '@/lib/teamColors';
 
 function LeaderBoardPage() {
   const { leaderboard, userRank, userScore, isLoading } = useLeaderBoard();
@@ -146,30 +147,72 @@ function LeaderBoardPage() {
           </div>
           
           {/* Finals Bet Card */}
-          {user && (
-            <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/30 dark:to-blue-900/30 p-4 rounded-lg border border-blue-100 dark:border-blue-900/50">
-              <div className="flex items-center">
-                <StarIcon className="h-5 w-5 text-yellow-500 mr-2" />
-                <p className="text-gray-700 dark:text-gray-300 text-sm font-medium">Your Finals Champion Pick</p>
-              </div>
-              
-              {leaderboard?.find(entry => entry.email.toLowerCase() === user.email?.toLowerCase())?.finalsBet ? (
-                <div className="mt-3 flex items-center space-x-2">
-                  <Logo 
-                    teamName={leaderboard.find(entry => entry.email.toLowerCase() === user.email?.toLowerCase())?.finalsBet || ''} 
-                    size="small" 
-                  />
-                  <span className="font-medium text-gray-900 dark:text-gray-100">
-                    {leaderboard.find(entry => entry.email.toLowerCase() === user.email?.toLowerCase())?.finalsBet}
-                  </span>
-                </div>
-              ) : (
-                <div className="mt-3 text-gray-500 dark:text-gray-400 italic">
-                  You have not picked a finals champion yet
-                </div>
-              )}
-            </div>
-          )}
+{user && (
+  <div className="relative p-4 rounded-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
+    {/* Dynamic background gradient based on team */}
+    {leaderboard?.find(entry => entry.email.toLowerCase() === user.email?.toLowerCase())?.finalsBet && (
+      <div 
+        className="absolute inset-0 pointer-events-none opacity-15 dark:opacity-25" 
+        style={{ 
+          background: (() => {
+            const teamName = leaderboard.find(entry => entry.email.toLowerCase() === user.email?.toLowerCase())?.finalsBet;
+            if (!teamName) return "linear-gradient(to right, #f9fafb, #f3f4f6)";
+            
+            const teamColor = nbaTeamColors[teamName as keyof typeof nbaTeamColors] || '#3B82F6';
+            const withOpacity = (hexColor: string, opacity: number) => {
+              const hex = hexColor.replace('#', '');
+              const r = parseInt(hex.substring(0, 2), 16);
+              const g = parseInt(hex.substring(2, 4), 16);
+              const b = parseInt(hex.substring(4, 6), 16);
+              return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+            };
+            
+            return `linear-gradient(135deg, ${withOpacity(teamColor, 1)} 0%, ${withOpacity(teamColor, 0.6)} 50%, ${withOpacity(teamColor, 0.2)} 100%)`;
+          })()
+        }}
+      />
+    )}
+    
+    <div className="relative z-10">
+      <div className="flex items-center">
+        <StarIcon className="h-5 w-5 text-yellow-500 mr-2" />
+        <p className="text-gray-700 dark:text-gray-300 text-sm font-medium">Your Finals Champion Pick</p>
+      </div>
+      
+      {leaderboard?.find(entry => entry.email.toLowerCase() === user.email?.toLowerCase())?.finalsBet ? (
+        <div className="mt-3 flex items-center space-x-2">
+          <Logo 
+            teamName={leaderboard.find(entry => entry.email.toLowerCase() === user.email?.toLowerCase())?.finalsBet || ''} 
+            size="small" 
+          />
+          <span 
+            className="font-medium text-lg" 
+            style={{ 
+              color: (() => {
+                const teamName = leaderboard.find(entry => entry.email.toLowerCase() === user.email?.toLowerCase())?.finalsBet;
+                if (!teamName) return ''; 
+                return nbaTeamColors[teamName as keyof typeof nbaTeamColors] || '';
+              })()
+            }}
+          >
+            {leaderboard.find(entry => entry.email.toLowerCase() === user.email?.toLowerCase())?.finalsBet}
+          </span>
+        </div>
+      ) : (
+        <div className="mt-3 flex items-center space-y-2">
+          <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg w-full">
+            <p className="text-gray-500 dark:text-gray-400 italic">
+              You have not picked a finals champion yet
+            </p>
+            <a href="/finals" className="inline-block mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline">
+              Make your prediction now →
+            </a>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+)}
         </div>
       </div>
     </div>
