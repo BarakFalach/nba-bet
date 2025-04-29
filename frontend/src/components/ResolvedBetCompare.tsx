@@ -110,7 +110,7 @@ export default function ResolvedBetCompare({ bet, onCollapse }: ResolvedBetCompa
               ) : (
                 betsWithoutUser.map((userBet, index) => {
                   const isCorrect = userBet.winnerTeam === actualWinner;
-                  
+                  const isExactScoreDiffSeries = !isGameType && userBet.winMargin === (bet.events.team1Score + bet.events.team2Score);
                   return (
                     <div 
                       key={index}
@@ -129,12 +129,11 @@ export default function ResolvedBetCompare({ bet, onCollapse }: ResolvedBetCompa
                         </div>
                       </div>
                       <div className="flex items-center">
-                        
                         {userBet.winMargin != null && userBet.winMargin > 0 && (
                           <div className={`ml-2 text-xs px-2 py-1 rounded ${
                             userBet.winnerTeam === actualWinner && 
                             ((isGameType && userBet.winMargin === actualPointDiff) ||
-                             (!isGameType && userBet.winMargin === bet.winMargin)) // For series, compare to user bet margin
+                             (isExactScoreDiffSeries)) // For series, compare to user bet margin
                               ? 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200'
                               : 'bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300'
                           }`}>
