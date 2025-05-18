@@ -11,6 +11,7 @@ export interface Event {
   team1Score: number;
   team2: string; 
   team2Score: number; 
+  gameNumber: number;
 }
 
 export enum nbaTeams {

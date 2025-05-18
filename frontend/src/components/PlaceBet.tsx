@@ -112,10 +112,18 @@ const PlaceBet: React.FC<PlaceBetProps> = ({ bet, onClose }) => {
         )}
 
         {/* Event Info */}
-        <p className="text-center text-gray-700 dark:text-gray-300 mb-6">
-          <span className="font-semibold">{bet.events.team1}</span> vs{' '}
-          <span className="font-semibold">{bet.events.team2}</span>
-        </p>
+        <div className="text-center mb-6">
+          <p className="text-gray-700 dark:text-gray-300">
+            <span className="font-semibold">{bet.events.team1}</span> vs{' '}
+            <span className="font-semibold">{bet.events.team2}</span>
+          </p>
+          {/* Game Number Indicator */}
+          {isGameType && bet.events.gameNumber && (
+            <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 mt-1">
+              Game {bet.events.gameNumber}
+            </p>
+          )}
+        </div>
 
         {/* Team Selection */}
         <div className="flex flex-col gap-2 mb-6">
