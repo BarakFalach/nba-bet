@@ -8,6 +8,7 @@ import {
   CalendarIcon,
   TrophyIcon,
   ClockIcon,
+  BookOpenIcon,
 } from '@heroicons/react/24/outline';
 import { WithProviders } from '@/lib/providers';
 import { usePathname } from 'next/navigation';
@@ -127,6 +128,17 @@ function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
             >
               <TrophyIcon className="h-5 w-5 mr-1" />
               <span>Leaderboard</span>
+            </Link>
+            <Link
+              href="/rules"
+              className={`flex items-center px-4 py-2 ml-2 rounded-lg transition-colors flex-shrink-0 ${
+                pathname?.includes('/rules')
+                  ? 'bg-blue-500 text-white'
+                  : 'text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              <BookOpenIcon className="h-5 w-5 mr-1" />
+              <span>Rules</span>
             </Link>
           </div>
         </header>
