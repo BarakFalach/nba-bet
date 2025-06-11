@@ -6,6 +6,7 @@ import { useUser } from '@/hooks/useUser';
 import { TrophyIcon, ArrowTrendingUpIcon, StarIcon } from '@heroicons/react/24/outline';
 import Logo from '@/components/Logo';
 import { nbaTeamColors } from '@/lib/teamColors';
+import Player from '@/components/Player';
 
 function LeaderBoardPage() {
   const { leaderboard, userRank, userScore, isLoading } = useLeaderBoard();
@@ -40,10 +41,11 @@ function LeaderBoardPage() {
           {leaderboard && leaderboard.length > 0 ? (
             <div>
               {/* Table Header */}
-              <div className="bg-gray-50 dark:bg-gray-600 py-2 px-4 grid grid-cols-12 text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+              <div className="bg-gray-50 dark:bg-gray-600 py-2 px-4 grid grid-cols-24 text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
                 <div className="col-span-1 text-center">#</div>
-                <div className="col-span-5">Name</div>
-                <div className="col-span-3 text-center">Finals Pick</div>
+                <div className="col-span-10">Name</div>
+                <div className="col-span-4 text-center">Team</div>
+                <div className="col-span-6 text-left">MVP</div>
                 <div className="col-span-3 text-right">Points</div>
               </div>
               
@@ -64,7 +66,7 @@ function LeaderBoardPage() {
                   return (
                     <li 
                       key={entry.email}
-                      className={`py-3 px-4 grid grid-cols-12 items-center ${
+                      className={`py-3 px-4 grid grid-cols-24 items-center ${
                         isCurrentUser 
                           ? 'bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500'
                           : ''
@@ -82,21 +84,39 @@ function LeaderBoardPage() {
                       </div>
                       
                       {/* User Name */}
-                      <div className={`col-span-5 font-medium ${
+                      <div className={`col-span-10 font-medium ${
                         isCurrentUser ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-gray-100'
                       }`}>
                         {entry.name || entry.email.split('@')[0]}
                         {isCurrentUser && <span className="ml-2 text-xs text-blue-500">(You)</span>}
                       </div>
                       
-                      {/* Finals Bet */}
-                      <div className="col-span-3 flex justify-center">
+                      {/* Finals Team Bet */}
+                      <div className="col-span-4 flex justify-center">
                         {entry.finalsBet ? (
                           <div className="flex items-center space-x-1">
                             <Logo teamName={entry.finalsBet} size="xsmall" />
                             <span className="text-xs text-gray-600 dark:text-gray-400 hidden sm:inline">
                               {entry.finalsBet}
                             </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400 dark:text-gray-600 italic">
+                            No pick
+                          </span>
+                        )}
+                      </div>
+                      
+                      {/* Finals MVP Bet */}
+                      <div className="col-span-6 flex justify-left">
+                        {entry.finalsMvpBet ? (
+                          <div className="flex items-center space-x-1">
+                            <Player
+                              size="small"
+                              showName={false}
+                              playerId={entry?.finalsMvpPlayerId}
+                              playerName={entry.finalsMvpBet}
+                            />
                           </div>
                         ) : (
                           <span className="text-xs text-gray-400 dark:text-gray-600 italic">

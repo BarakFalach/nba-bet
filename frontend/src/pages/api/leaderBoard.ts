@@ -18,9 +18,17 @@ export default async function handler(req, res) {
   
   if (finalsBetsError) return res.status(500).json({ error: finalsBetsError.message })
 
+  // Step 1c: Fetch all finals MVP bets with user IDs and player names
+  const { data: finalsMvpBets, error: finalsMvpBetsError } = await supabase
+    .from('finals_mvp_bet')
+    .select('userId, playerName, playerId, pointsGained')
+  
+  if (finalsMvpBetsError) return res.status(500).json({ error: finalsMvpBetsError.message })
+
   // Step 2: Aggregate total points per user
   const userScores = new Map()
   const userFinalsBets = new Map() // Store finals bet info per user
+  const userFinalsMvpBets = new Map() // Store finals MVP bet info per user
   
   // Process regular bets
   for (const bet of bets || []) {
@@ -44,11 +52,31 @@ export default async function handler(req, res) {
       userScores.set(uid, 0)
     }
   }
+  
+  // Process finals MVP bets
+  for (const finalsMvpBet of finalsMvpBets || []) {
+    const uid = finalsMvpBet.userId
+    // Add points from finals MVP bet (if available)
+    if (finalsMvpBet.pointsGained) {
+      userScores.set(uid, (userScores.get(uid) || 0) + (finalsMvpBet.pointsGained || 0))
+    }
+    // Store the player name and ID for this user's finals MVP bet
+    userFinalsMvpBets.set(uid, {
+      playerName: finalsMvpBet.playerName,
+      playerId: finalsMvpBet.playerId
+    })
+    
+    // Make sure this user is included in the leaderboard even if they have no other bets
+    if (!userScores.has(uid)) {
+      userScores.set(uid, 0)
+    }
+  }
 
   // Get combined list of all user IDs who have placed any type of bet
   const userIds = Array.from(new Set([
     ...userScores.keys(),
-    ...userFinalsBets.keys()
+    ...userFinalsBets.keys(),
+    ...userFinalsMvpBets.keys()
   ]))
 
   // Step 3: Fetch user names from Users table
@@ -61,26 +89,32 @@ export default async function handler(req, res) {
 
   const uuidToUser = new Map(users.map(u => [u.uuid, { name: u.name, email: u.email }]))
 
-  // Step 4: Build leaderboard list with finals bet information
+  // Step 4: Build leaderboard list with finals bet and finals MVP bet information
   const leaderboard = userIds.map(uuid => {
     const user = uuidToUser.get(uuid) || { name: 'Unknown', email: '' }
+    const finalsMvpBet = userFinalsMvpBets.get(uuid) || null;
+    
     return {
       name: user.name,
       email: user.email,
       score: userScores.get(uuid) || 0,
       userId: uuid,
-      finalsBet: userFinalsBets.get(uuid) || null
+      finalsBet: userFinalsBets.get(uuid) || null,
+      finalsMvpBet: finalsMvpBet ? finalsMvpBet.playerName : null,
+      finalsMvpPlayerId: finalsMvpBet ? finalsMvpBet.playerId : null
     }
   })
   .sort((a, b) => b.score - a.score)
 
-  // Return user data with score and finals bet
+  // Return user data with score, finals bet, and finals MVP bet
   return res.status(200).json(
-    leaderboard.map(({ name, email, score, finalsBet }) => ({ 
+    leaderboard.map(({ name, email, score, finalsBet, finalsMvpBet, finalsMvpPlayerId }) => ({ 
       name, 
       email, 
       score,
-      finalsBet 
+      finalsBet,
+      finalsMvpBet,
+      finalsMvpPlayerId
     })),
   )
 }
