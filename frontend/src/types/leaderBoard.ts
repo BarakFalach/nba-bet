@@ -2,5 +2,7 @@ export interface LeaderBoardRow {
   email: string;
   name: string;
   score: number;
-  finalsBet: string
+  finalsBet?: string
+  finalsMvpBet?: string
+  finalsMvpPlayerId?: string
 }

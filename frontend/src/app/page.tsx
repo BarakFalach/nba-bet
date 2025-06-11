@@ -10,14 +10,20 @@ import { CalendarIcon } from '@heroicons/react/24/solid';
 import PageLoader from '@/components/PageLoader';
 import { useState } from 'react';
 import FinalsBet from '@/components/FinalsBet';
+import FinalsMvpBet from '@/components/FinalsMvpBet';
 import { useFinalsBet } from '@/hooks/useFinalsBet';
+import { useFinalsMvpBet } from '@/hooks/useFinalsMvpBet';
 import Logo from '@/components/Logo';
+import Player from '@/components/Player';
 
 function MainPage() {
   const router = useRouter();
   const { user } = useUser();
   const [showFinalsBetModal, setShowFinalsBetModal] = useState(false);
+  const [showFinalsMvpModal, setShowFinalsMvpModal] = useState(false);
   const { finalsBetTeam: finalsBet } = useFinalsBet();
+  const { finalsMvpPlayer: mvpBet, finalsMvpBet } = useFinalsMvpBet();
+
 
   const { unplacedBets, isLoading } = useBets();
   const {
@@ -33,8 +39,6 @@ function MainPage() {
 
   const completionPercentage = (userScore / topScore) * 100;
 
-  const mvpBet = '';
-
   const handleGoToUpcomingBets = () => {
     router.push('/upcoming-bets');
   };
@@ -45,6 +49,10 @@ function MainPage() {
 
   const handleFinalsBetClick = () => {
     setShowFinalsBetModal(true);
+  };
+
+  const handleFinalsMvpClick = () => {
+    setShowFinalsMvpModal(true);
   };
 
   if (isLoading || isLeaderBoardLoading) {
@@ -176,13 +184,26 @@ function MainPage() {
               Finals MVP
             </p>
             {mvpBet ? (
-              <p className="text-lg font-medium text-gray-800 dark:text-gray-100">
-                {mvpBet}
-              </p>
+              <div className="flex items-center justify-between mt-1">
+                <Player playerId={finalsMvpBet?.playerId} playerName={finalsMvpBet?.playerName} />
+                <button
+                  onClick={handleFinalsMvpClick}
+                  className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1 transition-colors"
+                  aria-label="Change Finals MVP bet"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </button>
+              </div>
             ) : (
-              <p className="text-amber-500 dark:text-amber-400 italic text-sm">
+              <button
+                onClick={handleFinalsMvpClick}
+                className="text-amber-500 dark:text-amber-400 italic text-sm underline mt-1 flex items-center"
+              >
                 Not placed yet
-              </p>
+              </button>
             )}
           </div>
         </div>
@@ -206,6 +227,10 @@ function MainPage() {
       {/* FinalsBet Modal */}
       {showFinalsBetModal && (
         <FinalsBet onClose={() => setShowFinalsBetModal(false)} />
+      )}
+      {/* FinalsMvpBet Modal */}
+      {showFinalsMvpModal && (
+        <FinalsMvpBet onClose={() => setShowFinalsMvpModal(false)} />
       )}
     </div>
   );

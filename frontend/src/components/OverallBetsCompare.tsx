@@ -113,7 +113,7 @@ export default function OverallBetsCompare({ round, roundLabel }: OverallBetsCom
               <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">Loading leaderboard...</p>
             </div>
           ) : (
-            <div className="max-h-[320px] overflow-y-auto rounded-lg bg-white dark:bg-gray-700 shadow-sm">
+            <div className="overflow-y-auto rounded-lg bg-white dark:bg-gray-700 shadow-sm">
               {allUserStats.length === 0 ? (
                 <div className="py-4 text-center text-gray-500 dark:text-gray-400">
                   No data available for this round
