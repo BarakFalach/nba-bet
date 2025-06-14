@@ -53,8 +53,6 @@ export function useFinalsMvpBet(): FinalsMvpQueryResult & FinalsMvpMutationResul
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  console.log('Finals MVP Bet:', finalsMvpBet);
-
   // Mutation to place or update a finals MVP bet
   const {
     mutateAsync: placeBet,

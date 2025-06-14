@@ -14,9 +14,9 @@ export default function BetCompare({ bet, onCollapse }: BetCompareProps) {
   const { team1, team2 } = bet.events;
 
   const { 
-    otherBets, 
+    otherBets,
     isLoading, 
-    betsWithoutUser,
+    sortedBetsByTeamAndMargin:betsWithoutUser,
   } = useBetCompare(bet.id, team1, team2);
 
   // Count bets per team

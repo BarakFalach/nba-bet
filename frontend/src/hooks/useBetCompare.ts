@@ -24,6 +24,8 @@ interface BetCompareResult {
   betId: string;
   otherBets: UserBet[];
   betsWithoutUser: UserBet[];
+  sortedBetsByWinMargin: UserBet[];
+  sortedBetsByTeamAndMargin: UserBet[]; // Added this new property
   isLoading: boolean;
   error: Error | null;
   stats: BetStats;
@@ -60,15 +62,31 @@ export function useBetCompare(betId: string, team1: string, team2: string): BetC
   });
 
   const betsWithoutUser = user?.id 
-  ? otherBets.filter(bet => bet.userId !== user.id)
-  : otherBets;
+    ? otherBets.filter(bet => bet.userId !== user.id)
+    : otherBets;
 
-// Sort betsWithoutUser by total points earned (descending)
-const sortedBetsWithoutUser = [...betsWithoutUser].sort((a, b) => {
-  const totalPointsA = (a.pointsGained || 0) + (a.pointsGainedWinMargin || 0);
-  const totalPointsB = (b.pointsGained || 0) + (b.pointsGainedWinMargin || 0);
-  return totalPointsB - totalPointsA; // Descending order
-});
+  // Sort betsWithoutUser by total points earned (descending)
+  const sortedBetsByPoints = [...betsWithoutUser].sort((a, b) => {
+    const totalPointsA = (a.pointsGained || 0) + (a.pointsGainedWinMargin || 0);
+    const totalPointsB = (b.pointsGained || 0) + (b.pointsGainedWinMargin || 0);
+    return totalPointsB - totalPointsA; // Descending order
+  });
+
+  // Sort betsWithoutUser by winMargin (ascending)
+  const sortedBetsByWinMargin = [...betsWithoutUser].sort((a, b) => {
+    return (a.winMargin || 0) - (b.winMargin || 0); // Ascending order
+  });
+
+  // Sort by team first, then by winMargin within each team group
+  const sortedBetsByTeamAndMargin = [...betsWithoutUser].sort((a, b) => {
+    // First, sort by team (team1 first, then team2)
+    if (a.winnerTeam !== b.winnerTeam) {
+      return a.winnerTeam === team1 ? -1 : 1;
+    }
+    
+    // Then sort by win margin (ascending)
+    return (a.winMargin || 0) - (b.winMargin || 0);
+  });
 
   // Calculate statistics based on fetched data
   const calculateStats = (): BetStats => {
@@ -108,11 +126,13 @@ const sortedBetsWithoutUser = [...betsWithoutUser].sort((a, b) => {
   
   // Get stats based on current data
   const stats = calculateStats();
-  
+
   return {
     betId,
     otherBets,
-    betsWithoutUser: sortedBetsWithoutUser,
+    betsWithoutUser: sortedBetsByPoints, // Keep the current behavior
+    sortedBetsByWinMargin,
+    sortedBetsByTeamAndMargin, // New sorted array by team then margin
     isLoading,
     error: error as Error | null,
     stats,
