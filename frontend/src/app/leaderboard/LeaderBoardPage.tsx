@@ -42,11 +42,11 @@ function LeaderBoardPage() {
             <div>
               {/* Table Header */}
               <div className="bg-gray-50 dark:bg-gray-600 py-2 px-4 grid grid-cols-24 text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
-                <div className="col-span-1 text-center">#</div>
-                <div className="col-span-10">Name</div>
-                <div className="col-span-4 text-center">Team</div>
-                <div className="col-span-6 text-left">MVP</div>
-                <div className="col-span-3 text-right">Points</div>
+                <div className="col-span-2 text-left"></div>
+                <div className="col-span-11">Name</div>
+                <div className="col-span-4 text-left">Team</div>
+                <div className="col-span-4 text-left">MVP</div>
+                <div className="col-span-3 text-center">Points</div>
               </div>
               
               <ul className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -68,14 +68,14 @@ function LeaderBoardPage() {
                       key={entry.email}
                       className={`py-3 px-4 grid grid-cols-24 items-center ${
                         isCurrentUser 
-                          ? 'bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500'
+                          ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-500'
                           : ''
                       }`}
                     >
                       {/* Rank & Medal */}
-                      <div className="col-span-1 flex justify-center items-center">
+                      <div className="col-span-2 flex justify-left items-center">
                         {medal ? (
-                          <span>{medal}</span>
+                          <span className="ml-[-4px]">{medal}</span>
                         ) : (
                           <span className="text-gray-500 dark:text-gray-400 font-medium">
                             {index + 1}
@@ -84,15 +84,15 @@ function LeaderBoardPage() {
                       </div>
                       
                       {/* User Name */}
-                      <div className={`col-span-10 font-medium ${
+                      <div className={`col-span-11 font-medium ${
                         isCurrentUser ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-gray-100'
                       }`}>
                         {entry.name || entry.email.split('@')[0]}
-                        {isCurrentUser && <span className="ml-2 text-xs text-blue-500">(You)</span>}
+                        {isCurrentUser && <span className="ml-2 text-xs text-blue-500"></span>}
                       </div>
                       
                       {/* Finals Team Bet */}
-                      <div className="col-span-4 flex justify-center">
+                      <div className="col-span-4 flex justify-left">
                         {entry.finalsBet ? (
                           <div className="flex items-center space-x-1">
                             <Logo teamName={entry.finalsBet} size="xsmall" />
@@ -108,7 +108,7 @@ function LeaderBoardPage() {
                       </div>
                       
                       {/* Finals MVP Bet */}
-                      <div className="col-span-6 flex justify-left">
+                      <div className="col-span-4 flex justify-left">
                         {entry.finalsMvpBet ? (
                           <div className="flex items-center space-x-1">
                             <Player
@@ -120,7 +120,7 @@ function LeaderBoardPage() {
                           </div>
                         ) : (
                           <span className="text-xs text-gray-400 dark:text-gray-600 italic">
-                            No pick
+                            Nan
                           </span>
                         )}
                       </div>
