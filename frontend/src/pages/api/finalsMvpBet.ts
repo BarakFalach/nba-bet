@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { supabase } from '@/lib/supabaseClient';
 import NBA from 'nba';
-import axios from 'axios';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Handle POST request to create or update a finals MVP bet
@@ -30,86 +29,73 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.error('Placing finals MVP bet:', { userId, playerName });
 
     try {
-      // Get playerId from balldontlie API
-      const apiKey = process.env.BALL_DONT_LIE_API_KEY;
+      // Get player information using NBA library
+      let NBA_player;
+      
       try {
-        const response = await axios.get('https://api.balldontlie.io/v1/players', {
-          params: {
-            search: playerName
-          },
-          headers: {
-            'Authorization': `Bearer ${apiKey}`
-          }
-        });
+        NBA_player = await NBA.findPlayer(playerName);
+        
+        if (!NBA_player) {
+          return res.status(404).json({ 
+            message: 'Player not found',
+            details: `Could not find a player matching the name "${playerName}"`
+          });
+        }
+        
+        const fullPlayerName = NBA_player.fullName;
+        
+        // Check if the user already has a finals MVP bet
+        const { data: existingBet, error: fetchError } = await supabase
+          .from('finals_mvp_bet')
+          .select('*')
+          .eq('userId', userId)
+          .single();
 
-        if (response.data.data && response.data.data.length > 0) {
-          
-          // Get the first matching player
-          // playerId = response.data.data[0].id;
-          
-          // Store player details for reference
-          const player = response.data.data[0];
-          const fullPlayerName = `${player.first_name} ${player.last_name}`;
-          const NBA_player = await NBA.findPlayer(fullPlayerName);
+        if (fetchError && fetchError.code !== 'PGRST116') {
+          throw fetchError;
+        }
 
-          
-          // Check if the user already has a finals MVP bet
-          const { data: existingBet, error: fetchError } = await supabase
+        let result;
+
+        if (existingBet) {
+          // Update existing bet
+          const { data, error: updateError } = await supabase
             .from('finals_mvp_bet')
-            .select('*')
-            .eq('userId', userId)
+            .update({ 
+              playerId: NBA_player.playerId, 
+              playerName: fullPlayerName,
+              created_at: new Date().toISOString() 
+            })
+            .eq('id', existingBet.id)
+            .select()
             .single();
 
-          if (fetchError && fetchError.code !== 'PGRST116') {
-            throw fetchError;
-          }
-
-          let result;
-
-          if (existingBet) {
-            // Update existing bet
-            const { data, error: updateError } = await supabase
-              .from('finals_mvp_bet')
-              .update({ 
-                playerId: NBA_player.playerId, 
-                playerName: fullPlayerName,
-                created_at: new Date().toISOString() 
-              })
-              .eq('id', existingBet.id)
-              .select()
-              .single();
-
-            if (updateError) throw updateError;
-            result = data;
-          } else {
-            // Create new bet
-            const { data, error: insertError } = await supabase
-              .from('finals_mvp_bet')
-              .insert({
-                userId,
-                playerId: NBA_player.playerId, 
-                playerName: fullPlayerName,
-                created_at: new Date().toISOString(),
-              })
-              .select()
-              .single();
+          if (updateError) throw updateError;
+          result = data;
+        } else {
+          // Create new bet
+          const { data, error: insertError } = await supabase
+            .from('finals_mvp_bet')
+            .insert({
+              userId,
+              playerId: NBA_player.playerId, 
+              playerName: fullPlayerName,
+              created_at: new Date().toISOString(),
+            })
+            .select()
+            .single();
 
             if (insertError) throw insertError;
             result = data;
           }
 
           return res.status(200).json(result);
-        } else {
-          return res.status(404).json({ 
-            message: 'Player not found',
-            details: `Could not find a player matching the name "${playerName}"`
-          });
-        }
-      } catch (apiError) {
-        console.error('Error fetching player from BallDontLie API:', apiError);
+        
+      } catch (nbaError) {
+        console.error('Error finding player using NBA library:', nbaError);
         return res.status(500).json({ 
           message: 'Failed to retrieve player information',
-          details: 'Error connecting to player database'
+          details: 'Error searching for player in NBA database'
         });
       }
     } catch (error) {
