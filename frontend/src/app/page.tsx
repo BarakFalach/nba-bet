@@ -21,8 +21,8 @@ function MainPage() {
   const { user } = useUser();
   const [showFinalsBetModal, setShowFinalsBetModal] = useState(false);
   const [showFinalsMvpModal, setShowFinalsMvpModal] = useState(false);
-  const { finalsBetTeam: finalsBet } = useFinalsBet();
-  const { finalsMvpPlayer: mvpBet, finalsMvpBet } = useFinalsMvpBet();
+  const { finalsBetTeam: finalsBet, isLoading: isFinalsBetLoading } = useFinalsBet();
+  const { finalsMvpPlayer: mvpBet, finalsMvpBet, isLoading: isFinalsMvpBetLoading } = useFinalsMvpBet();
 
 
   const { unplacedBets, isLoading } = useBets();
@@ -147,7 +147,12 @@ function MainPage() {
   <p className="text-sm text-gray-500 dark:text-gray-400">
     NBA Finals Champion
   </p>
-  {finalsBet ? (
+  {isFinalsBetLoading ? (
+    <div className="flex items-center mt-2 animate-pulse">
+      <div className="h-8 w-8 bg-gray-300 dark:bg-gray-600 rounded-full mr-3"></div>
+      <div className="h-5 bg-gray-300 dark:bg-gray-600 rounded w-24"></div>
+    </div>
+  ) : finalsBet ? (
     <div className="flex items-center justify-between mt-1">
       <div className="flex items-center">
         <div className="w-8 h-8 mr-3">
@@ -183,7 +188,12 @@ function MainPage() {
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Finals MVP
             </p>
-            {mvpBet ? (
+            {isFinalsMvpBetLoading ? (
+              <div className="flex items-center mt-2 animate-pulse">
+                <div className="h-8 w-8 bg-gray-300 dark:bg-gray-600 rounded-full mr-3"></div>
+                <div className="h-5 bg-gray-300 dark:bg-gray-600 rounded w-24"></div>
+              </div>
+            ) : mvpBet ? (
               <div className="flex items-center justify-between mt-1">
                 <Player playerId={finalsMvpBet?.playerId} playerName={finalsMvpBet?.playerName} />
                 <button
