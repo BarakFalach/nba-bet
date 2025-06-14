@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { XMarkIcon, CheckIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import { useFinalsMvpBet } from '@/hooks/useFinalsMvpBet';
+import Player from './Player';
 
 interface FinalsMvpBetProps {
   onClose: () => void;
@@ -186,9 +187,7 @@ export default function FinalsMvpBet({ onClose }: FinalsMvpBetProps) {
               {finalsMvpPlayer && (
                 <div className="flex items-center mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg shadow-sm">
                   <div className="flex items-center gap-3">
-                    <div className="bg-blue-100 dark:bg-blue-800 h-12 w-12 rounded-full flex items-center justify-center text-blue-800 dark:text-blue-200 font-bold text-xl">
-                      {finalsMvpPlayer.split(' ').map(word => word[0]).join('')}
-                    </div>
+                    <Player showName={false} size="large" playerId={finalsMvpBet?.playerId} playerName={finalsMvpBet?.playerName} />
                     <div>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
                         Your current prediction
