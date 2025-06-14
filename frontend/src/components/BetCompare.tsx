@@ -16,7 +16,7 @@ export default function BetCompare({ bet, onCollapse }: BetCompareProps) {
   const { 
     otherBets,
     isLoading, 
-    sortedBetsByTeamAndMargin:betsWithoutUser,
+    sortedBetsByTeamAndMargin,
   } = useBetCompare(bet.id, team1, team2);
 
   // Count bets per team
@@ -117,7 +117,7 @@ export default function BetCompare({ bet, onCollapse }: BetCompareProps) {
         {/* Other users' bets */}
         <div>
           <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {betsWithoutUser.length > 0 ? "Other Users' Bets" : 'No other bets yet'}
+            {sortedBetsByTeamAndMargin.length > 0 ? "Other Users' Bets" : 'No other bets yet'}
           </h3>
           
           {isLoading ? (
@@ -126,12 +126,12 @@ export default function BetCompare({ bet, onCollapse }: BetCompareProps) {
             </div>
           ) : (
             <div className="overflow-y-auto rounded-lg bg-white dark:bg-gray-600 shadow-sm">
-              {betsWithoutUser.length === 0 ? (
+              {sortedBetsByTeamAndMargin.length === 0 ? (
                 <div className="py-4 text-center text-gray-500 dark:text-gray-400">
                   No one else has placed bets on this event yet
                 </div>
               ) : (
-                betsWithoutUser.map((userBet, index) => (
+                sortedBetsByTeamAndMargin.map((userBet, index) => (
                   <div 
                     key={index}
                     className="flex items-center py-2 px-3 border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
