@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useUser } from './useUser';
+import { useSeason } from './useSeason';
+import { QueryKeys } from '@/lib/constants';
 
 interface FinalsMvpBet {
   id: number;
@@ -28,6 +30,7 @@ interface FinalsMvpMutationResult {
  */
 export function useFinalsMvpBet(): FinalsMvpQueryResult & FinalsMvpMutationResult {
   const { user } = useUser();
+  const { season, seasonConfig } = useSeason();
   const queryClient = useQueryClient();
   const userId = user?.id || '';
 
@@ -37,11 +40,11 @@ export function useFinalsMvpBet(): FinalsMvpQueryResult & FinalsMvpMutationResul
     isLoading,
     isError,
   } = useQuery<FinalsMvpBet | null>({
-    queryKey: ['finalsMvpBet', userId],
+    queryKey: [QueryKeys.FINALS_MVP_BET, userId, season],
     queryFn: async () => {
       if (!userId) return null;
       
-      const response = await fetch(`/api/finalsMvpBet?userId=${userId}`);
+      const response = await fetch(`/api/finalsMvpBet?userId=${userId}&season=${season}`);
       if (!response.ok) {
         throw new Error('Failed to fetch finals MVP bet');
       }
@@ -72,6 +75,7 @@ export function useFinalsMvpBet(): FinalsMvpQueryResult & FinalsMvpMutationResul
         body: JSON.stringify({
           userId,
           playerName,
+          season,
         }),
       });
 
@@ -84,17 +88,17 @@ export function useFinalsMvpBet(): FinalsMvpQueryResult & FinalsMvpMutationResul
     },
     onSuccess: (newBet) => {
       // Update the cache with the new bet data
-      queryClient.setQueryData(['finalsMvpBet', userId], newBet);
+      queryClient.setQueryData([QueryKeys.FINALS_MVP_BET, userId, season], newBet);
       
       // Invalidate and refetch any related queries that might be affected
-      queryClient.invalidateQueries({ queryKey: ['finalsMvpBet'] });
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.FINALS_MVP_BET] });
     },
   });
 
-  // Check if betting is still open based on the deadline
+  // Check if betting is still open based on the season-specific deadline
   const isBettingDeadlineReached = () => {
-    // Deadline: June 30, 2025 at 20:00:00 UTC
-    const deadlineUTC = new Date('2025-06-30T20:00:00Z');
+    const deadline = seasonConfig.mvpDeadline;
+    const deadlineUTC = new Date(deadline);
     const currentTime = new Date();
     
     return currentTime >= deadlineUTC;

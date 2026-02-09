@@ -1,16 +1,18 @@
 import { useQuery } from '@tanstack/react-query'
 import { QueryKeys } from '@/lib/constants'
 import { useUser } from './useUser'
+import { useSeason } from './useSeason'
 import { LeaderBoardRow } from '../types/leaderBoard';
 
 export const useLeaderBoard = () => {
 
   const {user} = useUser();
+  const { season } = useSeason();
   const userId = user?.id || null;
 
   const { data: leaderboard, isLoading, isError } = useQuery<LeaderBoardRow[]>({
-  queryKey: [QueryKeys.LEADERBOARD, userId],
-    queryFn: () => fetch(`/api/leaderBoard?userId=${userId}`).then(res => res.json()),
+  queryKey: [QueryKeys.LEADERBOARD, userId, season],
+    queryFn: () => fetch(`/api/leaderBoard?userId=${userId}&season=${season}`).then(res => res.json()),
     enabled: !!userId,
   })
 

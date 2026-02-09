@@ -1,27 +1,56 @@
 import { supabase } from '@/lib/supabaseClient';
 
-export default async function handler(req, res) {
-  const { userId } = req.query
-  if (!userId) return res.status(400).json({ error: 'Missing userId' })
+const LEGACY_SEASON = 2025;
 
-  // Step 1: Fetch all bets with userId and points
-  const { data: bets, error: betsError } = await supabase
+export default async function handler(req, res) {
+  const { userId, season } = req.query
+  if (!userId) return res.status(400).json({ error: 'Missing userId' })
+  
+  const seasonNum = season ? Number(season) : null;
+  const isLegacySeason = seasonNum === LEGACY_SEASON || seasonNum === null;
+
+  // Step 1: Fetch all bets with userId and points, filtered by season via events
+  let betsQuery = supabase
     .from('bets')
-    .select('userId, pointsGained, pointsGainedWinMargin')
+    .select('userId, pointsGained, pointsGainedWinMargin, events!inner(season)')
+  
+  if (isLegacySeason) {
+    betsQuery = betsQuery.is('events.season', null);
+  } else {
+    betsQuery = betsQuery.eq('events.season', seasonNum);
+  }
+
+  const { data: bets, error: betsError } = await betsQuery;
 
   if (betsError) return res.status(500).json({ error: betsError.message })
 
-  // Step 1b: Fetch all finals bets with user IDs and team names
-  const { data: finalsBets, error: finalsBetsError } = await supabase
+  // Step 1b: Fetch all finals bets with user IDs and team names, filtered by season
+  let finalsBetsQuery = supabase
     .from('finals_bet')
     .select('userId, finalsBet, pointsGained')
   
+  if (isLegacySeason) {
+    finalsBetsQuery = finalsBetsQuery.is('season', null);
+  } else {
+    finalsBetsQuery = finalsBetsQuery.eq('season', seasonNum);
+  }
+
+  const { data: finalsBets, error: finalsBetsError } = await finalsBetsQuery;
+  
   if (finalsBetsError) return res.status(500).json({ error: finalsBetsError.message })
 
-  // Step 1c: Fetch all finals MVP bets with user IDs and player names
-  const { data: finalsMvpBets, error: finalsMvpBetsError } = await supabase
+  // Step 1c: Fetch all finals MVP bets with user IDs and player names, filtered by season
+  let finalsMvpBetsQuery = supabase
     .from('finals_mvp_bet')
     .select('userId, playerName, playerId, pointsGained')
+  
+  if (isLegacySeason) {
+    finalsMvpBetsQuery = finalsMvpBetsQuery.is('season', null);
+  } else {
+    finalsMvpBetsQuery = finalsMvpBetsQuery.eq('season', seasonNum);
+  }
+
+  const { data: finalsMvpBets, error: finalsMvpBetsError } = await finalsMvpBetsQuery;
   
   if (finalsMvpBetsError) return res.status(500).json({ error: finalsMvpBetsError.message })
 
