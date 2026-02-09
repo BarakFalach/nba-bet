@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { QueryKeys } from "@/lib/constants";
 import { useUser } from "./useUser";
+import { useSeason } from "./useSeason";
 import { Bet } from "../types/bets";
 import { Event } from "../types/events";
 
@@ -8,8 +9,8 @@ export interface EnhancedBet extends Bet {
   events: Event
 }
 
-async function fetchBets(userId: string): Promise<EnhancedBet[]> {
-  const data = await fetch('/api/bets?userId=' + userId)
+async function fetchBets(userId: string, season: number): Promise<EnhancedBet[]> {
+  const data = await fetch(`/api/bets?userId=${userId}&season=${season}`)
   const json = await data.json()
   return json;
   
@@ -17,9 +18,10 @@ async function fetchBets(userId: string): Promise<EnhancedBet[]> {
 
 export function useBets() {
   const {user} = useUser();
+  const { season } = useSeason();
   const { data: bets, isLoading, isError } = useQuery({
-    queryKey: [QueryKeys.BETS],
-    queryFn: () =>  fetchBets(user?.id || ""),
+    queryKey: [QueryKeys.BETS, season],
+    queryFn: () =>  fetchBets(user?.id || "", season),
     select: (data) => {
       const validBets = data.filter((bet: EnhancedBet) => bet.events.startTime !== null);
 

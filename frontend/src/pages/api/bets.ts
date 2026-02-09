@@ -1,27 +1,36 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { supabase } from '@/lib/supabaseClient';
 
+// Helper to build season filter for events table
+const LEGACY_SEASON = 2025;
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
-  const {userId} = req.query;
+  const { userId, season } = req.query;
+  const seasonNum = season ? Number(season) : null;
 
+  try {
+    // Build the query with season filter on events
+    let query = supabase
+      .from('bets')
+      .select(`
+        *,
+        events:eventId!inner (*)
+      `)
+      .eq('userId', userId);
 
+    // Filter by season (NULL in DB means 2025)
+    if (seasonNum === LEGACY_SEASON || seasonNum === null) {
+      query = query.is('events.season', null);
+    } else {
+      query = query.eq('events.season', seasonNum);
+    }
 
-
-  try {    
-    const { data, error } = await supabase
-    .from('bets')
-    .select(`
-      *,
-      events:eventId (*)
-    `)
-    .eq('userId', userId)
-
+    const { data, error } = await query;
 
     if (error) {
-      debugger
       throw error;
     }
 

@@ -3,19 +3,32 @@ import { supabase } from '@/lib/supabaseClient';
 import NBA from 'nba';
 import axios from 'axios';
 
+const LEGACY_SEASON = 2025;
+const CURRENT_SEASON = 2026;
+
+// Season-specific MVP deadlines
+const SEASON_MVP_DEADLINES: Record<number, string> = {
+  2025: '2025-06-30T20:00:00Z',
+  2026: '2026-06-29T20:00:00Z',
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Handle POST request to create or update a finals MVP bet
   if (req.method === 'POST') {
-    const { userId, playerName } = req.body;
+    const { userId, playerName, season } = req.body;
+    const seasonNum = season ? Number(season) : CURRENT_SEASON;
+    const isLegacySeason = seasonNum === LEGACY_SEASON;
+    // For DB storage: NULL for 2025, actual number for others
+    const dbSeason = isLegacySeason ? null : seasonNum;
 
     if (!userId || !playerName) {
       return res.status(400).json({ message: 'Missing required fields: userId and playerName' });
     }
 
-    // Check if betting deadline has passed
+    // Check if betting deadline has passed for this season
     const isBettingDeadlineReached = () => {
-      // Deadline: April 19, 2025 at 20:00:00 UTC
-      const deadlineUTC = new Date('2025-06-30T20:00:00Z');
+      const deadline = SEASON_MVP_DEADLINES[seasonNum] || SEASON_MVP_DEADLINES[CURRENT_SEASON];
+      const deadlineUTC = new Date(deadline);
       const currentTime = new Date();
       
       return currentTime >= deadlineUTC;
@@ -27,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         details: 'The deadline for placing finals MVP bets has passed.'
       });
     }
-    console.error('Placing finals MVP bet:', { userId, playerName });
+    console.error('Placing finals MVP bet:', { userId, playerName, season: seasonNum });
 
     try {
       // Get playerId from balldontlie API
@@ -53,12 +66,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           const NBA_player = await NBA.findPlayer(fullPlayerName);
 
           
-          // Check if the user already has a finals MVP bet
-          const { data: existingBet, error: fetchError } = await supabase
+          // Check if the user already has a finals MVP bet for this season
+          let existingQuery = supabase
             .from('finals_mvp_bet')
             .select('*')
-            .eq('userId', userId)
-            .single();
+            .eq('userId', userId);
+          
+          if (isLegacySeason) {
+            existingQuery = existingQuery.is('season', null);
+          } else {
+            existingQuery = existingQuery.eq('season', seasonNum);
+          }
+
+          const { data: existingBet, error: fetchError } = await existingQuery.single();
 
           if (fetchError && fetchError.code !== 'PGRST116') {
             throw fetchError;
@@ -82,13 +102,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             if (updateError) throw updateError;
             result = data;
           } else {
-            // Create new bet
+            // Create new bet with season
             const { data, error: insertError } = await supabase
               .from('finals_mvp_bet')
               .insert({
                 userId,
                 playerId: NBA_player.playerId, 
                 playerName: fullPlayerName,
+                season: dbSeason,
                 created_at: new Date().toISOString(),
               })
               .select()
@@ -120,18 +141,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // Handle GET request to fetch a user's finals MVP bet
   if (req.method === 'GET') {
-    const { userId } = req.query;
+    const { userId, season } = req.query;
+    const seasonNum = season ? Number(season) : CURRENT_SEASON;
+    const isLegacySeason = seasonNum === LEGACY_SEASON;
 
     if (!userId) {
       return res.status(400).json({ message: 'Missing userId parameter' });
     }
 
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('finals_mvp_bet')
         .select('*')
-        .eq('userId', userId)
-        .single();
+        .eq('userId', userId);
+      
+      // Filter by season (NULL in DB means 2025)
+      if (isLegacySeason) {
+        query = query.is('season', null);
+      } else {
+        query = query.eq('season', seasonNum);
+      }
+
+      const { data, error } = await query.single();
 
       if (error) {
         // If no bet found, this is not really an error

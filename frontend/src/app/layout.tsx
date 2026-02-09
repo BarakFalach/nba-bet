@@ -12,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { WithProviders } from '@/lib/providers';
 import { usePathname } from 'next/navigation';
+import { SeasonSelector } from '@/components/SeasonSelector';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -85,13 +86,8 @@ function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
               NBA Bet
             </Link>
             
-            {/* User profile link */}
-            {/* <Link
-              href="/profile" 
-              className="flex items-center hover:bg-gray-700 p-1 rounded-lg"
-            >
-              <UserIcon className="h-6 w-6" />
-            </Link> */}
+            {/* Season Selector */}
+            <SeasonSelector />
           </div>
 
           {/* Navigation Pills */}

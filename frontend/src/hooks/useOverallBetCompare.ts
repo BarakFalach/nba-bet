@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useUser } from './useUser';
+import { useSeason } from './useSeason';
 import { QueryKeys } from '@/lib/constants';
 import { roundType } from '../types/events';
 
@@ -46,6 +47,7 @@ interface OverallBetCompareResult {
  */
 export function useOverallBetCompare(view: View = 'all'): OverallBetCompareResult {
   const { user } = useUser();
+  const { season } = useSeason();
   
   const {
     data,
@@ -54,9 +56,9 @@ export function useOverallBetCompare(view: View = 'all'): OverallBetCompareResul
     error,
     refetch
   } = useQuery<OverallBetCompareResponse>({
-    queryKey: [QueryKeys.OVERALL_BET_COMPARE, view],
+    queryKey: [QueryKeys.OVERALL_BET_COMPARE, view, season],
     queryFn: async () => {
-      const response = await fetch(`/api/overallOtherBets?view=${view}`);
+      const response = await fetch(`/api/overallOtherBets?view=${view}&season=${season}`);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));

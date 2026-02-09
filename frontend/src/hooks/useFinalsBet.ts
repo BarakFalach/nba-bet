@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useUser } from './useUser';
+import { useSeason } from './useSeason';
+import { QueryKeys } from '@/lib/constants';
 
 interface FinalsBet {
   id?: string;
@@ -27,6 +29,7 @@ interface FinalsMutationResult {
  */
 export function useFinalsBet(): FinalsQueryResult & FinalsMutationResult {
   const { user } = useUser();
+  const { season, seasonConfig } = useSeason();
   const queryClient = useQueryClient();
   const userId = user?.id || '';
 
@@ -36,11 +39,11 @@ export function useFinalsBet(): FinalsQueryResult & FinalsMutationResult {
     isLoading,
     isError,
   } = useQuery<FinalsBet | null>({
-    queryKey: ['finalsBet', userId],
+    queryKey: [QueryKeys.FINALS_BET, userId, season],
     queryFn: async () => {
       if (!userId) return null;
       
-      const response = await fetch(`/api/finalsBet?userId=${userId}`);
+      const response = await fetch(`/api/finalsBet?userId=${userId}&season=${season}`);
       if (!response.ok) {
         throw new Error('Failed to fetch finals bet');
       }
@@ -71,6 +74,7 @@ export function useFinalsBet(): FinalsQueryResult & FinalsMutationResult {
         body: JSON.stringify({
           userId,
           teamName,
+          season,
         }),
       });
 
@@ -83,21 +87,21 @@ export function useFinalsBet(): FinalsQueryResult & FinalsMutationResult {
     },
     onSuccess: (newBet) => {
       // Update the cache with the new bet data
-      queryClient.setQueryData(['finalsBet', userId], newBet);
+      queryClient.setQueryData([QueryKeys.FINALS_BET, userId, season], newBet);
       
       // Invalidate and refetch any related queries that might be affected
-      queryClient.invalidateQueries({ queryKey: ['finalsBet'] });
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.FINALS_BET] });
     },
   });
 
-    // Check if betting is still open based on the deadline
-    const isBettingDeadlineReached = () => {
-      // Deadline: April 19, 2025 at 20:00:00 UTC
-      const deadlineUTC = new Date('2025-04-19T20:00:00Z');
-      const currentTime = new Date();
-      
-      return currentTime >= deadlineUTC;
-    };
+  // Check if betting is still open based on the season-specific deadline
+  const isBettingDeadlineReached = () => {
+    const deadline = seasonConfig.finalsDeadline;
+    const deadlineUTC = new Date(deadline);
+    const currentTime = new Date();
+    
+    return currentTime >= deadlineUTC;
+  };
   
 
   return {

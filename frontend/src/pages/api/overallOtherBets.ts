@@ -4,6 +4,8 @@ import { roundType } from '../../types/events';
 
 export type View = roundType | "all";
 
+const LEGACY_SEASON = 2025;
+
 interface UserStats {
   userName: string;
   userEmail: string;
@@ -16,8 +18,10 @@ interface UserStats {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    // Extract view parameter (round type or "all")
-    const { view } = req.query;
+    // Extract view and season parameters
+    const { view, season } = req.query;
+    const seasonNum = season ? Number(season) : null;
+    const isLegacySeason = seasonNum === LEGACY_SEASON || seasonNum === null;
     
     if (!view) {
       return res.status(400).json({ error: 'Missing required query parameter: view' });
@@ -50,11 +54,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           team2,
           team2Score,
           round,
-          status
+          status,
+          season
         )
       `)
       // Only include resolved bets (status = 3)
       .eq('events.status', 3);
+    
+    // Filter by season (NULL in DB means 2025)
+    if (isLegacySeason) {
+      query = query.is('events.season', null);
+    } else {
+      query = query.eq('events.season', seasonNum);
+    }
     
     // Filter by round if not "all"
     if (view !== 'all') {

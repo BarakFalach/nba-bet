@@ -3,6 +3,7 @@
 import { useUser } from '@/hooks/useUser';
 import { useBets } from '@/hooks/useBets';
 import { useLeaderBoard } from '@/hooks/useLeaderBoard';
+import { useSeason } from '@/hooks/useSeason';
 import { withAuth } from '@/lib/withAuth';
 import { useRouter } from 'next/navigation';
 import { TrophyIcon, ChartBarIcon } from '@heroicons/react/24/outline';
@@ -19,6 +20,7 @@ import Player from '@/components/Player';
 function MainPage() {
   const router = useRouter();
   const { user } = useUser();
+  const { season } = useSeason();
   const [showFinalsBetModal, setShowFinalsBetModal] = useState(false);
   const [showFinalsMvpModal, setShowFinalsMvpModal] = useState(false);
   const { finalsBetTeam: finalsBet } = useFinalsBet();
@@ -74,7 +76,7 @@ function MainPage() {
                 </span>
               </h1>
               <p className="text-gray-600 dark:text-gray-400 mt-1">
-                Here is your betting dashboard for the 2025 season
+                Here is your betting dashboard for the {season} season
               </p>
             </div>
           </div>
@@ -91,7 +93,7 @@ function MainPage() {
               Your Stats
             </h2>
             <span className="text-sm text-gray-500 dark:text-gray-400">
-              Season 2025
+              Season {season}
             </span>
           </div>
 

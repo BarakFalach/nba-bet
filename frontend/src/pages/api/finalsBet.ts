@@ -1,21 +1,40 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { supabase } from '@/lib/supabaseClient';
 
+const LEGACY_SEASON = 2025;
+const CURRENT_SEASON = 2026;
+
+// Season-specific deadlines
+const SEASON_DEADLINES: Record<number, string> = {
+  2025: '2025-04-19T20:00:00Z',
+  2026: '2026-04-18T20:00:00Z',
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Handle GET request to fetch a user's finals bet
   if (req.method === 'GET') {
-    const { userId } = req.query;
+    const { userId, season } = req.query;
+    const seasonNum = season ? Number(season) : CURRENT_SEASON;
+    const isLegacySeason = seasonNum === LEGACY_SEASON;
 
     if (!userId) {
       return res.status(400).json({ message: 'Missing userId parameter' });
     }
 
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('finals_bet')
         .select('*')
-        .eq('userId', userId)
-        .single();
+        .eq('userId', userId);
+      
+      // Filter by season (NULL in DB means 2025)
+      if (isLegacySeason) {
+        query = query.is('season', null);
+      } else {
+        query = query.eq('season', seasonNum);
+      }
+
+      const { data, error } = await query.single();
 
       if (error) {
         // If no bet found, this is not really an error
@@ -34,16 +53,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // Handle POST request to create or update a finals bet
   if (req.method === 'POST') {
-    const { userId, teamName } = req.body;
+    const { userId, teamName, season } = req.body;
+    const seasonNum = season ? Number(season) : CURRENT_SEASON;
+    const isLegacySeason = seasonNum === LEGACY_SEASON;
+    // For DB storage: NULL for 2025, actual number for others
+    const dbSeason = isLegacySeason ? null : seasonNum;
 
     if (!userId || !teamName) {
       return res.status(400).json({ message: 'Missing required fields: userId and teamName' });
     }
 
-    // Check if betting deadline has passed
+    // Check if betting deadline has passed for this season
     const isBettingDeadlineReached = () => {
-      // Deadline: April 19, 2025 at 20:00:00 UTC
-      const deadlineUTC = new Date('2025-04-19T20:00:00Z');
+      const deadline = SEASON_DEADLINES[seasonNum] || SEASON_DEADLINES[CURRENT_SEASON];
+      const deadlineUTC = new Date(deadline);
       const currentTime = new Date();
       
       return currentTime >= deadlineUTC;
@@ -57,12 +80,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
-      // Check if the user already has a finals bet
-      const { data: existingBet, error: fetchError } = await supabase
+      // Check if the user already has a finals bet for this season
+      let existingQuery = supabase
         .from('finals_bet')
         .select('*')
-        .eq('userId', userId)
-        .single();
+        .eq('userId', userId);
+      
+      if (isLegacySeason) {
+        existingQuery = existingQuery.is('season', null);
+      } else {
+        existingQuery = existingQuery.eq('season', seasonNum);
+      }
+
+      const { data: existingBet, error: fetchError } = await existingQuery.single();
 
       if (fetchError && fetchError.code !== 'PGRST116') {
         throw fetchError;
@@ -74,7 +104,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // Update existing bet
         const { data, error: updateError } = await supabase
           .from('finals_bet')
-          .update({ finalsBet:teamName, created_at: new Date().toISOString() })
+          .update({ finalsBet: teamName, created_at: new Date().toISOString() })
           .eq('id', existingBet.id)
           .select()
           .single();
@@ -82,12 +112,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (updateError) throw updateError;
         result = data;
       } else {
-        // Create new bet
+        // Create new bet with season
         const { data, error: insertError } = await supabase
           .from('finals_bet')
           .insert({
             userId,
             finalsBet: teamName,
+            season: dbSeason,
             created_at: new Date().toISOString(),
           })
           .select()

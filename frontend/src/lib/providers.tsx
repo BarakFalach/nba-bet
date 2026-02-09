@@ -1,4 +1,5 @@
 import { UserProvider } from '@/hooks/useUser';
+import { SeasonProvider } from '@/hooks/useSeason';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 
@@ -11,7 +12,9 @@ export const WithProviders = <T extends React.ComponentType<any>>(
     return (
       <QueryClientProvider client={queryClient}>
         <UserProvider>
-          <Component {...props} />
+          <SeasonProvider>
+            <Component {...props} />
+          </SeasonProvider>
         </UserProvider>
       </QueryClientProvider>
     );
