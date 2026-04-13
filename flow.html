@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NBA Bet – Automated Flow</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #f8fafc;
+      margin-bottom: 0.4rem;
+    }
+    .subtitle {
+      text-align: center;
+      color: #94a3b8;
+      margin-bottom: 2.5rem;
+      font-size: 0.95rem;
+    }
+
+    /* ── Layout ─────────────────────────────────── */
+    .page { max-width: 960px; margin: 0 auto; }
+
+    section { margin-bottom: 2.5rem; }
+
+    h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #7dd3fc;
+      margin-bottom: 1rem;
+    }
+
+    /* ── Cards ───────────────────────────────────── */
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+    }
+    .card + .card { margin-top: 0.75rem; }
+
+    .card-title {
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card p, .card li { font-size: 0.9rem; color: #cbd5e1; line-height: 1.6; }
+    .card ul { padding-left: 1.2rem; }
+    .card li { margin-bottom: 0.2rem; }
+
+    /* status pills */
+    .pill {
+      display: inline-block;
+      padding: 0.15rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .pill-green  { background: #166534; color: #bbf7d0; }
+    .pill-yellow { background: #713f12; color: #fef08a; }
+    .pill-red    { background: #7f1d1d; color: #fecaca; }
+    .pill-blue   { background: #1e3a5f; color: #93c5fd; }
+    .pill-gray   { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+
+    /* ── Flow diagram ────────────────────────────── */
+    .flow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    .flow-node {
+      width: 100%;
+      max-width: 680px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 1rem 1.4rem;
+      position: relative;
+    }
+
+    .flow-node.trigger  { border-color: #f59e0b; }
+    .flow-node.worker   { border-color: #3b82f6; }
+    .flow-node.db       { border-color: #10b981; }
+    .flow-node.missing  { border-color: #ef4444; border-style: dashed; }
+    .flow-node.frontend { border-color: #8b5cf6; }
+
+    .flow-node .node-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.35rem;
+    }
+    .flow-node.trigger  .node-label { color: #f59e0b; }
+    .flow-node.worker   .node-label { color: #3b82f6; }
+    .flow-node.db       .node-label { color: #10b981; }
+    .flow-node.missing  .node-label { color: #ef4444; }
+    .flow-node.frontend .node-label { color: #8b5cf6; }
+
+    .flow-node .node-title {
+      font-weight: 600;
+      font-size: 1rem;
+      color: #f1f5f9;
+      margin-bottom: 0.4rem;
+    }
+    .flow-node p, .flow-node li { font-size: 0.88rem; color: #94a3b8; line-height: 1.55; }
+    .flow-node ul { padding-left: 1.2rem; }
+    .flow-node li { margin-bottom: 0.15rem; }
+
+    .arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.3rem 0;
+      color: #475569;
+      font-size: 1.4rem;
+      line-height: 1;
+    }
+    .arrow-label {
+      font-size: 0.72rem;
+      color: #64748b;
+      margin-top: 0.1rem;
+    }
+
+    /* ── Tables ──────────────────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    th {
+      text-align: left;
+      padding: 0.55rem 0.75rem;
+      background: #0f172a;
+      color: #7dd3fc;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    td {
+      padding: 0.55rem 0.75rem;
+      color: #cbd5e1;
+      border-top: 1px solid #1e293b;
+    }
+    tr:hover td { background: #1e2d40; }
+
+    code {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 0.82rem;
+      background: #0f172a;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      color: #7dd3fc;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+    @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .scoring-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.45rem 0;
+      border-bottom: 1px solid #1e293b;
+      font-size: 0.87rem;
+      color: #cbd5e1;
+    }
+    .scoring-row:last-child { border-bottom: none; }
+    .pts { font-weight: 700; color: #fbbf24; }
+
+    .note {
+      background: #1c1f26;
+      border-left: 3px solid #f59e0b;
+      padding: 0.75rem 1rem;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.88rem;
+      color: #d1d5db;
+      margin-top: 0.75rem;
+    }
+    .note strong { color: #fbbf24; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <h1>NBA Bet — Automated Flow</h1>
+  <p class="subtitle">End-to-end data pipeline, current state &amp; gaps</p>
+
+  <!-- ── 1. TRIGGER ───────────────────────────────────────────── -->
+  <section>
+    <h2>1 · Trigger</h2>
+    <div class="card">
+      <div class="card-title">
+        <span>⚡</span> How the worker is invoked
+        <span class="pill pill-yellow">Not yet automated</span>
+      </div>
+      <p>
+        The worker is an <strong>AWS Lambda</strong> function (<code>worker/lambda_function.py</code>).
+        It has no scheduled trigger configured yet — it must be invoked manually
+        (e.g. via the AWS Console or CLI).
+      </p>
+      <div class="note">
+        <strong>Gap:</strong> A recurring schedule needs to be created — for example an
+        <strong>AWS EventBridge (CloudWatch Events) cron rule</strong> firing every ~10 minutes
+        during game hours, or a simpler hourly rule during the playoffs.
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 2. END-TO-END FLOW ────────────────────────────────────── -->
+  <section>
+    <h2>2 · End-to-end Flow</h2>
+
+    <div class="flow">
+
+      <!-- Trigger -->
+      <div class="flow-node trigger">
+        <div class="node-label">Trigger</div>
+        <div class="node-title">⏱ EventBridge cron <span class="pill pill-yellow">needed</span></div>
+        <p>Fires the Lambda on a schedule (e.g. every 10 min during game windows).</p>
+      </div>
+
+      <div class="arrow">↓<div class="arrow-label">invokes</div></div>
+
+      <!-- Lambda -->
+      <div class="flow-node worker">
+        <div class="node-label">AWS Lambda</div>
+        <div class="node-title">🔧 <code>lambda_function.handler</code></div>
+        <p>Entry point. Wraps the async pipeline and returns a status JSON.</p>
+      </div>
+
+      <div class="arrow">↓<div class="arrow-label">calls</div></div>
+
+      <!-- BDL fetch -->
+      <div class="flow-node worker">
+        <div class="node-label">Step 1 · bdl_client.py</div>
+        <div class="node-title">🏀 Fetch games from BallDontLie API</div>
+        <ul>
+          <li>Paginates through all games for <code>BDL_SEASON=2025</code> (= 2025-26 season)</li>
+          <li><strong>Production:</strong> <code>postseason=true</code> — playoff games only</li>
+          <li><strong>TEST_MODE:</strong> last 7 days of regular-season games</li>
+        </ul>
+      </div>
+
+      <div class="arrow">↓<div class="arrow-label">passes games to</div></div>
+
+      <!-- Supabase read -->
+      <div class="flow-node db">
+        <div class="node-label">Step 2 · supabase_client.py</div>
+        <div class="node-title">🗄 Read existing events from Supabase</div>
+        <p>Loads all events for <code>season=2026</code> (app season). Builds a lookup by <code>parentEvent</code> key so new vs. existing rows can be detected.</p>
+      </div>
+
+      <div class="arrow">↓<div class="arrow-label">diff &amp; upsert</div></div>
+
+      <!-- models -->
+      <div class="flow-node worker">
+        <div class="node-label">Step 3 · models.py + sync.py</div>
+        <div class="node-title">⚙️ Classify &amp; map each game</div>
+        <ul>
+          <li><strong>Round detection</strong> — maps game date to <code>playin / firstRound / secondRound / conference / finals</code> via hardcoded date ranges</li>
+          <li><strong>Game number</strong> — numbers games within each matchup chronologically (game 1, 2, 3…)</li>
+          <li><strong>Status mapping</strong> — <code>UPCOMING(1)</code> · <code>IN_PROGRESS(2)</code> · <code>RESOLVED(3)</code></li>
+          <li><strong>New games</strong> → inserted as new event rows</li>
+          <li><strong>Existing games</strong> → score + status updated if game started or ended</li>
+        </ul>
+      </div>
+
+      <div class="arrow">↓<div class="arrow-label">then builds</div></div>
+
+      <!-- Series -->
+      <div class="flow-node worker">
+        <div class="node-label">Step 4 · models.py → build_series_events</div>
+        <div class="node-title">📊 Create / update series-level events</div>
+        <ul>
+          <li>Groups games by matchup (team pair), counts wins per team</li>
+          <li>Series <code>status</code> → <code>RESOLVED</code> once a team reaches 4 wins (1 for play-in)</li>
+          <li>Series <code>id</code> = <code>series_{TeamA}_{TeamB}</code> (alphabetically sorted for consistency)</li>
+          <li>New series → inserted; existing series → win counts updated</li>
+        </ul>
+      </div>
+
+      <div class="arrow">↓<div class="arrow-label">writes to</div></div>
+
+      <!-- Supabase write -->
+      <div class="flow-node db">
+        <div class="node-label">Supabase · events table</div>
+        <div class="node-title">🗄 Events updated in database</div>
+        <p>Both <strong>game</strong> rows and <strong>series</strong> rows are kept in sync. The frontend reads from this table.</p>
+      </div>
+
+      <div class="arrow">↓<div class="arrow-label">should trigger — but doesn't yet</div></div>
+
+      <!-- MISSING: Bet resolution -->
+      <div class="flow-node missing">
+        <div class="node-label">Step 5 · MISSING</div>
+        <div class="node-title">🔴 Bet point calculation</div>
+        <p>
+          When an event transitions to <code>RESOLVED</code>, all user bets for that event
+          need to be evaluated and <code>pointsGained</code> / <code>pointsGainedWinMargin</code>
+          written back to the <code>bets</code> table.
+          <br/><br/>
+          This step does <strong>not exist yet</strong> — currently done manually.
+        </p>
+      </div>
+
+      <div class="arrow">↓<div class="arrow-label">read by</div></div>
+
+      <!-- Frontend -->
+      <div class="flow-node frontend">
+        <div class="node-label">Next.js Frontend</div>
+        <div class="node-title">🖥 Resolved Bets · Leaderboard</div>
+        <ul>
+          <li>Resolved Bets page reads <code>pointsGained</code> from <code>bets</code> table</li>
+          <li>Leaderboard sums <code>pointsGained + pointsGainedWinMargin</code> across all bets per user</li>
+          <li>Until Step 5 is built, these values remain <code>null</code> for new playoff games</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── 3. SCORING RULES ──────────────────────────────────────── -->
+  <section>
+    <h2>3 · Scoring Rules (what Step 5 must implement)</h2>
+    <div class="grid-2">
+
+      <div class="card">
+        <div class="card-title">🏀 Game events (play-in, conf finals, finals)</div>
+        <div class="scoring-row"><span>Correct winner</span><span class="pts">2 – 4 pts</span></div>
+        <div class="scoring-row"><span>Exact point difference</span><span class="pts">4 – 8 pts</span></div>
+        <div class="scoring-row"><span>Closest point difference</span><span class="pts">3 – 6 pts</span></div>
+        <p style="margin-top:0.6rem;font-size:0.8rem;color:#64748b">
+          "Closest" requires comparing <em>all</em> users' predictions — a cross-bet calculation.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📊 Series events (rounds 1 – 4)</div>
+        <div class="scoring-row"><span>Correct series winner</span><span class="pts">4 – 12 pts</span></div>
+        <div class="scoring-row"><span>Winner + exact games</span><span class="pts">6 – 16 pts</span></div>
+        <p style="margin-top:0.6rem;font-size:0.8rem;color:#64748b">
+          Points scale by round. Finals are worth 3× first round.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── 4. DATA MODEL ─────────────────────────────────────────── -->
+  <section>
+    <h2>4 · Key Database Tables</h2>
+    <div class="card" style="padding:0; overflow:hidden">
+      <table>
+        <thead>
+          <tr>
+            <th>Table</th>
+            <th>Key columns</th>
+            <th>Written by</th>
+            <th>Read by</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>events</code></td>
+            <td><code>id, team1, team2, team1Score, team2Score, status, round, eventType, gameNumber, season</code></td>
+            <td>Worker (Lambda)</td>
+            <td>Frontend, Bets API</td>
+          </tr>
+          <tr>
+            <td><code>bets</code></td>
+            <td><code>eventId, userId, winnerTeam, winMargin, pointsGained, pointsGainedWinMargin, calcFunc</code></td>
+            <td>Frontend (place bet) <br/><em style="color:#ef4444">+ missing: worker for points</em></td>
+            <td>Resolved bets, Leaderboard</td>
+          </tr>
+          <tr>
+            <td><code>finals_bet</code></td>
+            <td><code>userId, finalsBet, pointsGained, season</code></td>
+            <td>Frontend (manual for now)</td>
+            <td>Leaderboard</td>
+          </tr>
+          <tr>
+            <td><code>finals_mvp_bet</code></td>
+            <td><code>userId, playerName, playerId, pointsGained, season</code></td>
+            <td>Frontend (manual for now)</td>
+            <td>Leaderboard</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── 5. GAPS SUMMARY ───────────────────────────────────────── -->
+  <section>
+    <h2>5 · Gap Summary</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Gap</th><th>Status</th><th>Where to fix</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>Lambda has no scheduled trigger</td>
+            <td><span class="pill pill-yellow">Missing</span></td>
+            <td>AWS EventBridge cron rule</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Bet point calculation not automated — <code>pointsGained</code> never written by the worker</td>
+            <td><span class="pill pill-red">Missing</span></td>
+            <td><code>worker/sync.py</code> — new step after event resolves</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><code>correctScoreDifferenceClosest</code> requires cross-user comparison</td>
+            <td><span class="pill pill-red">Complex</span></td>
+            <td><code>worker/sync.py</code> — fetch all bets for event, find closest delta</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>Finals &amp; Finals MVP bets scored manually</td>
+            <td><span class="pill pill-yellow">Manual</span></td>
+            <td>Could be added to worker after Finals end</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
