@@ -74,7 +74,8 @@ interface LogoProps {
 
 const Logo: React.FC<LogoProps> = ({ teamName, size }) => {
   
-  const logo = teamLogos[teamName.replace(/\s+/g, '')]; 
+  const normalized = teamName.replace(/\s+/g, '');
+  const logo = teamLogos[normalized === '76ers' ? 'Sixers' : normalized];
   const height = size === "xsmall" ? 24 : size === "small" ? 32 : size === "medium" ? 48 : 64;
   const width = size === "xsmall" ? 24 : size === "small" ? 32 : size === "medium" ? 48 : 64;
 
