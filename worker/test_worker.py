@@ -19,6 +19,7 @@ from models import (
     build_series_events,
     calculate_points,
 )
+from sync import _should_create_bet
 from config import STATUS_UPCOMING, STATUS_IN_PROGRESS, STATUS_RESOLVED
 
 
@@ -331,6 +332,33 @@ class TestBuildSeriesEvents:
         assert update_data["team1Score"] == 1
         assert update_data["status"] == STATUS_IN_PROGRESS
 
+    def test_game_number_equals_games_played_not_total_rows(self):
+        """gameNumber should be wins sum (games played), not len(matchup_games)."""
+        # 4-2 series: 6 finished games + 1 extra upcoming row (should be ignored)
+        games = []
+        for i in range(4):  # Celtics win 4
+            games.append(make_game(100 + i, "Celtics", "Lakers",
+                f"2026-04-{20 + i * 2}T23:00:00.000Z",
+                status="Final", period=4, home_score=110, visitor_score=98))
+        for i in range(2):  # Lakers win 2
+            games.append(make_game(200 + i, "Lakers", "Celtics",
+                f"2026-04-{21 + i * 2}T23:00:00.000Z",
+                status="Final", period=4, home_score=105, visitor_score=98))
+        # Upcoming game 7 that never happens
+        games.append(make_game(300, "Celtics", "Lakers", "2026-04-30T23:00:00.000Z"))
+
+        new_series, _ = build_series_events(games, {})
+        assert new_series[0]["gameNumber"] == 6  # 4+2, not 7 (len of matchup_games)
+
+    def test_game_number_sweep(self):
+        games = []
+        for i in range(4):
+            games.append(make_game(100 + i, "Celtics", "Lakers",
+                f"2026-04-{20 + i * 2}T23:00:00.000Z",
+                status="Final", period=4, home_score=110, visitor_score=98))
+        new_series, _ = build_series_events(games, {})
+        assert new_series[0]["gameNumber"] == 4
+
     def test_series_parse_key_is_alphabetically_sorted(self):
         """Ensure the series key is consistent regardless of home/away order."""
         games = [
@@ -502,6 +530,7 @@ class TestCalculatePointsSeries:
         assert pts + margin == 12
 
     def test_unplaced_bet_handled_by_caller(self):
+
         # calculate_points is only called for placed bets (winnerTeam is not None).
         # This test documents the behaviour if somehow called with None.
         event = self._series_event()
@@ -509,3 +538,39 @@ class TestCalculatePointsSeries:
         pts, margin = calculate_points(bet, event, [bet])
         assert pts == 0
         assert margin == 0
+
+
+# ---------------------------------------------------------------------------
+# _should_create_bet tests
+# ---------------------------------------------------------------------------
+
+class TestShouldCreateBet:
+    def _ev(self, round_name: str, event_type: str) -> dict:
+        return {"round": round_name, "eventType": event_type}
+
+    def test_first_round_series_true(self):
+        assert _should_create_bet(self._ev("firstRound", "series")) is True
+
+    def test_first_round_game_false(self):
+        assert _should_create_bet(self._ev("firstRound", "game")) is False
+
+    def test_second_round_series_true(self):
+        assert _should_create_bet(self._ev("secondRound", "series")) is True
+
+    def test_second_round_game_false(self):
+        assert _should_create_bet(self._ev("secondRound", "game")) is False
+
+    def test_playin_game_true(self):
+        assert _should_create_bet(self._ev("playin", "playin")) is True
+
+    def test_conference_game_true(self):
+        assert _should_create_bet(self._ev("conference", "game")) is True
+
+    def test_conference_series_true(self):
+        assert _should_create_bet(self._ev("conference", "series")) is True
+
+    def test_finals_game_true(self):
+        assert _should_create_bet(self._ev("finals", "game")) is True
+
+    def test_finals_series_true(self):
+        assert _should_create_bet(self._ev("finals", "series")) is True

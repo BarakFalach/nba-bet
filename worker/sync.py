@@ -59,6 +59,24 @@ def _error(msg: str) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _should_create_bet(event: dict) -> bool:
+    """
+    Returns True only for event types that users actually bet on per round:
+      play-in:           playin/game events (no series — none exist anyway)
+      firstRound/second: series events only (users bet on the series, not games)
+      conference/finals: both game and series events
+    """
+    round_name = event.get("round", "")
+    event_type = event.get("eventType", "")
+    if round_name in ("firstRound", "secondRound"):
+        return event_type == "series"
+    return True
+
+
+# ---------------------------------------------------------------------------
 # Main sync pipeline
 # ---------------------------------------------------------------------------
 
@@ -224,7 +242,7 @@ async def sync_all() -> dict:
     bet_rows: list[dict] = []
     for ev in all_current_events:
         ev_id = ev.get("id")
-        if not ev_id:
+        if not ev_id or not _should_create_bet(ev):
             continue
         for user_id in target_ids:
             if (ev_id, str(user_id)) not in existing_bet_pairs:

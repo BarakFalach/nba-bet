@@ -10,12 +10,22 @@ The worker runs a 6-step pipeline on every execution:
 
 | Step | Description |
 |------|-------------|
-| 1 | Fetch all playoff games for the season from BallDontLie |
+| 1 | Fetch all playoff + play-in games from BallDontLie (from April 14 onwards) |
 | 2 | Load existing events and bet coverage from Supabase |
 | 3 | **Create** game-level events for new games; **update** scores and status as games progress and finish |
-| 4 | **Create** series-level events for new matchups; **update** win counts and series status |
-| 5 | **Create bet rows** for every user on each newly added event |
+| 4 | **Create** series-level events for new matchups (not play-in); **update** win counts and series status |
+| 5 | **Create bet rows** for each user on newly added events, per the betting structure below |
 | 6 | **Score bets** on events that resolved in this run — writes `pointsGained` and `pointsGainedWinMargin` |
+
+### Betting structure per round
+
+| Round | Bet on games | Bet on series |
+|-------|:------------:|:-------------:|
+| Play-in | ✓ | — |
+| First Round | — | ✓ |
+| Second Round | — | ✓ |
+| Conference Finals | ✓ | ✓ |
+| Finals | ✓ | ✓ |
 
 ---
 
@@ -31,23 +41,18 @@ pip install -r requirements.txt
 
 `.env` variables:
 
-| Variable | Purpose | Where to get it |
-|----------|---------|-----------------|
-| `BALL_DONT_LIE_API_KEY` | BallDontLie API key | [balldontlie.io](https://www.balldontlie.io) |
-| `SUPABASE_URL` | Supabase project URL | Supabase dashboard → Project Settings → API |
-| `SUPABASE_ANON_KEY` | Supabase anon/public key | Supabase dashboard → Project Settings → API |
-| `TEST_MODE` | Set to `true` for safe test runs | — |
-| `EVENTS_ONLY` | Set to `true` to sync events only — skips bet creation and scoring | — |
-| `TARGET_USER_IDS` | Comma-separated user IDs to restrict bet creation to. Defaults to `2`. Set to empty string to create bets for all users. | — |
+| Variable | Purpose |
+|----------|---------|
+| `BALL_DONT_LIE_API_KEY` | BallDontLie API key — [balldontlie.io](https://www.balldontlie.io) |
+| `SUPABASE_URL` | Supabase project URL (Project Settings → API) |
+| `SUPABASE_ANON_KEY` | Supabase anon/public key (Project Settings → API) |
+| `EVENTS_ONLY` | Set to `true` to create events without creating or scoring bets |
+| `TARGET_USER_IDS` | Comma-separated user UUIDs to restrict bet creation to. Leave empty to create bets for all users. |
 
 ### 2. Run the sync
 
 ```bash
-# Full run (uses live playoff data)
 python run.py
-
-# Safe test run — fetches last 7 days of regular-season games instead of playoffs
-TEST_MODE=true python run.py
 ```
 
 ### 3. Run tests
@@ -58,12 +63,20 @@ pytest test_worker.py -v
 
 ---
 
-## TEST_MODE
+## Modes
 
-When `TEST_MODE=true`, the worker fetches recent **regular-season** games instead of playoff data. This means:
-- You can run and validate the full pipeline any time of year
-- All games are assigned to `firstRound` (since regular-season games have no round)
-- Safe to run against your real Supabase database — it just creates test events
+### `EVENTS_ONLY=true`
+
+Creates and updates events in Supabase but skips bet creation and scoring entirely. Useful for inspecting what events would be created before publishing bets to users.
+
+### `TARGET_USER_IDS`
+
+Restricts bet creation to specific users. Useful for verifying the full pipeline (events + bets + scoring) for a single user before rolling out to everyone.
+
+```bash
+# Create bets only for two test users
+TARGET_USER_IDS=uuid-1,uuid-2 python run.py
+```
 
 ---
 
@@ -78,7 +91,6 @@ The workflow is defined in `.github/workflows/sync.yml`. It runs automatically:
 1. Go to the **Actions** tab in GitHub
 2. Select **NBA Bet Sync**
 3. Click **Run workflow**
-4. Optionally check **TEST_MODE** for a safe run with regular-season data
 
 ### Required secrets
 

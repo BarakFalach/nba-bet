@@ -167,7 +167,7 @@ def build_series_events(
                 else:
                     team2_wins += 1
 
-        total_games = len(matchup_games)
+        total_games = team1_wins + team2_wins
         earliest_datetime = matchup_games[0].get("datetime") or matchup_games[0].get("date", "")
         round_name = detect_round(earliest_datetime)
 
