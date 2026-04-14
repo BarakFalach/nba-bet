@@ -170,6 +170,7 @@ const PlaceBet: React.FC<PlaceBetProps> = ({ bet, onClose }) => {
             <input
               type="number"
               id="point-diff"
+              inputMode="numeric"
               value={pointDiff}
               onChange={(e) => setPointDiff(Number(e.target.value))}
               className="w-full px-4 py-2 border rounded-lg text-gray-900 dark:text-gray-100 bg-gray-200 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
