@@ -11,12 +11,15 @@ interface FinalsMvpBet {
   created_at: string;
 }
 
+type MvpBetStatus = 'pending_finals' | 'open' | 'closed';
+
 interface FinalsMvpQueryResult {
   finalsMvpBet: FinalsMvpBet | null;
   isLoading: boolean;
   isError: boolean;
   finalsMvpPlayer: string;
   isBetOpen: boolean;
+  betStatus: MvpBetStatus;
 }
 
 interface FinalsMvpMutationResult {
@@ -30,33 +33,30 @@ interface FinalsMvpMutationResult {
  */
 export function useFinalsMvpBet(): FinalsMvpQueryResult & FinalsMvpMutationResult {
   const { user } = useUser();
-  const { season, seasonConfig } = useSeason();
+  const { season } = useSeason();
   const queryClient = useQueryClient();
   const userId = user?.id || '';
 
-  // Query to fetch the current finals MVP bet
   const {
-    data: finalsMvpBet = null,
+    data: queryData = null,
     isLoading,
     isError,
-  } = useQuery<FinalsMvpBet | null>({
+  } = useQuery<{ bet: FinalsMvpBet | null; isOpen: boolean; betStatus: MvpBetStatus } | null>({
     queryKey: [QueryKeys.FINALS_MVP_BET, userId, season],
     queryFn: async () => {
       if (!userId) return null;
-      
+
       const response = await fetch(`/api/finalsMvpBet?userId=${userId}&season=${season}`);
       if (!response.ok) {
         throw new Error('Failed to fetch finals MVP bet');
       }
-      
-      const data = await response.json();
-      return data || null;
+
+      return response.json();
     },
     enabled: !!userId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
-  // Mutation to place or update a finals MVP bet
   const {
     mutateAsync: placeBet,
     isPending: isPlacing,
@@ -69,14 +69,8 @@ export function useFinalsMvpBet(): FinalsMvpQueryResult & FinalsMvpMutationResul
 
       const response = await fetch('/api/finalsMvpBet', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId,
-          playerName,
-          season,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, playerName, season }),
       });
 
       if (!response.ok) {
@@ -87,30 +81,22 @@ export function useFinalsMvpBet(): FinalsMvpQueryResult & FinalsMvpMutationResul
       return response.json();
     },
     onSuccess: (newBet) => {
-      // Update the cache with the new bet data
-      queryClient.setQueryData([QueryKeys.FINALS_MVP_BET, userId, season], newBet);
-      
-      // Invalidate and refetch any related queries that might be affected
+      queryClient.setQueryData(
+        [QueryKeys.FINALS_MVP_BET, userId, season],
+        (prev: { bet: FinalsMvpBet | null; isOpen: boolean; betStatus: MvpBetStatus } | null) =>
+          prev ? { ...prev, bet: newBet } : { bet: newBet, isOpen: false, betStatus: 'closed' as MvpBetStatus },
+      );
       queryClient.invalidateQueries({ queryKey: [QueryKeys.FINALS_MVP_BET] });
     },
   });
 
-  // Check if betting is still open based on the season-specific deadline
-  const isBettingDeadlineReached = () => {
-    const deadline = seasonConfig.mvpDeadline;
-    const deadlineUTC = new Date(deadline);
-    const currentTime = new Date();
-    
-    return currentTime >= deadlineUTC;
-  };
-
-
   return {
-    finalsMvpBet,
-    finalsMvpPlayer: finalsMvpBet?.playerName || '',
+    finalsMvpBet: queryData?.bet || null,
+    finalsMvpPlayer: queryData?.bet?.playerName || '',
     isLoading,
     isError,
-    isBetOpen: !isBettingDeadlineReached(), // Note: Changed to be consistent with the name (open means betting is allowed)
+    isBetOpen: queryData?.isOpen ?? false,
+    betStatus: queryData?.betStatus ?? 'pending_finals',
     placeBet,
     isPlacing,
     error,

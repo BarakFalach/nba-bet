@@ -47,7 +47,7 @@ export enum nbaTeams {
   Wizards = 'Wizards',
 }
 
-export type EventType = 'series' | 'game' | 'playin';
+export type EventType = 'series' | 'game' | 'playin' | 'finalsChampion' | 'finalsMvp';
 export type roundType = 'firstRound' | 'secondRound' | 'conference' | 'finals' | 'playin';
 
 export interface PredictionResult {

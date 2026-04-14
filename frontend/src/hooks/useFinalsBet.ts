@@ -29,33 +29,30 @@ interface FinalsMutationResult {
  */
 export function useFinalsBet(): FinalsQueryResult & FinalsMutationResult {
   const { user } = useUser();
-  const { season, seasonConfig } = useSeason();
+  const { season } = useSeason();
   const queryClient = useQueryClient();
   const userId = user?.id || '';
 
-  // Query to fetch the current finals bet
   const {
-    data: finalsBet = null,
+    data: queryData = null,
     isLoading,
     isError,
-  } = useQuery<FinalsBet | null>({
+  } = useQuery<{ bet: FinalsBet | null; isOpen: boolean } | null>({
     queryKey: [QueryKeys.FINALS_BET, userId, season],
     queryFn: async () => {
       if (!userId) return null;
-      
+
       const response = await fetch(`/api/finalsBet?userId=${userId}&season=${season}`);
       if (!response.ok) {
         throw new Error('Failed to fetch finals bet');
       }
-      
-      const data = await response.json();
-      return data || null;
+
+      return response.json();
     },
     enabled: !!userId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
-  // Mutation to place or update a finals bet
   const {
     mutateAsync: placeBet,
     isPending: isPlacing,
@@ -68,14 +65,8 @@ export function useFinalsBet(): FinalsQueryResult & FinalsMutationResult {
 
       const response = await fetch('/api/finalsBet', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId,
-          teamName,
-          season,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, teamName, season }),
       });
 
       if (!response.ok) {
@@ -86,30 +77,21 @@ export function useFinalsBet(): FinalsQueryResult & FinalsMutationResult {
       return response.json();
     },
     onSuccess: (newBet) => {
-      // Update the cache with the new bet data
-      queryClient.setQueryData([QueryKeys.FINALS_BET, userId, season], newBet);
-      
-      // Invalidate and refetch any related queries that might be affected
+      queryClient.setQueryData(
+        [QueryKeys.FINALS_BET, userId, season],
+        (prev: { bet: FinalsBet | null; isOpen: boolean } | null) =>
+          prev ? { ...prev, bet: newBet } : { bet: newBet, isOpen: false },
+      );
       queryClient.invalidateQueries({ queryKey: [QueryKeys.FINALS_BET] });
     },
   });
 
-  // Check if betting is still open based on the season-specific deadline
-  const isBettingDeadlineReached = () => {
-    const deadline = seasonConfig.finalsDeadline;
-    const deadlineUTC = new Date(deadline);
-    const currentTime = new Date();
-    
-    return currentTime >= deadlineUTC;
-  };
-  
-
   return {
-    finalsBet,
-    finalsBetTeam: finalsBet?.finalsBet || '',
+    finalsBet: queryData?.bet || null,
+    finalsBetTeam: queryData?.bet?.finalsBet || '',
     isLoading,
     isError,
-    isBetOpen: isBettingDeadlineReached(),
+    isBetOpen: queryData?.isOpen ?? false,
     placeBet,
     isPlacing,
     error,

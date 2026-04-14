@@ -2,10 +2,22 @@ import { supabase } from '@/lib/supabaseClient';
 
 const LEGACY_SEASON = 2025;
 
+async function isBettingClosed(eventType: string, season: number): Promise<boolean> {
+  if (season === LEGACY_SEASON) return true; // 2025 deadline always passed
+  const { data } = await supabase
+    .from('events')
+    .select('startTime')
+    .eq('eventType', eventType)
+    .eq('season', season)
+    .maybeSingle();
+  if (!data?.startTime) return false; // event not created yet — window not open
+  return new Date() >= new Date(data.startTime);
+}
+
 export default async function handler(req, res) {
   const { userId, season } = req.query
   if (!userId) return res.status(400).json({ error: 'Missing userId' })
-  
+
   const seasonNum = season ? Number(season) : null;
   const isLegacySeason = seasonNum === LEGACY_SEASON || seasonNum === null;
 
@@ -101,6 +113,13 @@ export default async function handler(req, res) {
     }
   }
 
+  // Check if betting windows are closed before revealing picks
+  const effectiveSeason = seasonNum ?? LEGACY_SEASON;
+  const [finalsBetClosed, finalsMvpBetClosed] = await Promise.all([
+    isBettingClosed('finalsChampion', effectiveSeason),
+    isBettingClosed('finalsMvp', effectiveSeason),
+  ]);
+
   // Get combined list of all user IDs who have placed any type of bet
   const userIds = Array.from(new Set([
     ...userScores.keys(),
@@ -128,9 +147,9 @@ export default async function handler(req, res) {
       email: user.email,
       score: userScores.get(uuid) || 0,
       userId: uuid,
-      finalsBet: userFinalsBets.get(uuid) || null,
-      finalsMvpBet: finalsMvpBet ? finalsMvpBet.playerName : null,
-      finalsMvpPlayerId: finalsMvpBet ? finalsMvpBet.playerId : null
+      finalsBet: finalsBetClosed ? (userFinalsBets.get(uuid) || null) : null,
+      finalsMvpBet: finalsMvpBetClosed ? (finalsMvpBet ? finalsMvpBet.playerName : null) : null,
+      finalsMvpPlayerId: finalsMvpBetClosed ? (finalsMvpBet ? finalsMvpBet.playerId : null) : null
     }
   })
   .sort((a, b) => b.score - a.score)

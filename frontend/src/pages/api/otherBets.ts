@@ -14,15 +14,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Get the event ID associated with this bet
+    // Get the event ID and closeTime for this bet
     const { data: betData, error: betError } = await supabase
       .from('bets')
-      .select('eventId')
+      .select('eventId, closeTime')
       .eq('id', betId)
       .single();
 
     if (betError || !betData) {
       return res.status(404).json({ error: 'Bet not found' });
+    }
+
+    // Hide other users' picks until the betting window closes
+    if (betData.closeTime && new Date(betData.closeTime) > new Date()) {
+      return res.status(200).json([]);
     }
 
     // Get all bets for this event with user IDs

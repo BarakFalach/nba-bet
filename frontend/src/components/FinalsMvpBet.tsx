@@ -9,7 +9,7 @@ interface FinalsMvpBetProps {
 }
 
 export default function FinalsMvpBet({ onClose }: FinalsMvpBetProps) {
-  const { finalsMvpBet, finalsMvpPlayer, isLoading, isBetOpen, placeBet, isPlacing, error } = useFinalsMvpBet();
+  const { finalsMvpBet, finalsMvpPlayer, isLoading, isBetOpen, betStatus, placeBet, isPlacing, error } = useFinalsMvpBet();
   const [playerName, setPlayerName] = useState('');
   const [isVisible, setIsVisible] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<{
@@ -154,7 +154,12 @@ export default function FinalsMvpBet({ onClose }: FinalsMvpBetProps) {
                     Submitting a new one will replace your current pick.
                   </div>
                 ) : null}
-                {!isBetOpen && (
+                {betStatus === 'pending_finals' && (
+                  <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/30 rounded text-yellow-700 dark:text-yellow-200 text-sm">
+                    <strong>Not open yet.</strong> The Finals MVP bet opens once both conference finals are decided.
+                  </div>
+                )}
+                {betStatus === 'closed' && (
                   <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/30 rounded text-red-700 dark:text-red-200 text-sm">
                     <strong>Betting is closed.</strong> The deadline for placing Finals MVP bets has passed.
                   </div>
