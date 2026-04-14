@@ -11,11 +11,13 @@ interface BetCompareProps {
 }
 
 export default function BetCompare({ bet, onCollapse }: BetCompareProps) {
-  const { team1, team2 } = bet.events;
+  const { team1, team2, startTime } = bet.events;
+  const userPlacedBet = bet.winnerTeam !== null;
+  const picksHidden = !userPlacedBet && (startTime ? new Date(startTime) > new Date() : false);
 
-  const { 
+  const {
     otherBets,
-    isLoading, 
+    isLoading,
     sortedBetsByTeamAndMargin:betsWithoutUser,
   } = useBetCompare(bet.id, team1, team2);
 
@@ -50,13 +52,21 @@ export default function BetCompare({ bet, onCollapse }: BetCompareProps) {
         <div className="mb-5">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Community Bets</h3>
-            <button 
+            <button
               onClick={onCollapse}
               className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
             >
               Hide details
             </button>
           </div>
+
+          {picksHidden && (
+            <div className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+              Picks are revealed after the game tips off
+            </div>
+          )}
+
+          {!picksHidden && <>
           
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div className="bg-white dark:bg-gray-700 p-2 rounded-lg text-center shadow-sm">
@@ -112,10 +122,11 @@ export default function BetCompare({ bet, onCollapse }: BetCompareProps) {
               <span >{team2Percentage}% ({team2Count})</span>
             </div>
           </div>
+          </>}
         </div>
 
         {/* Other users' bets */}
-        <div>
+        {!picksHidden && <div>
           <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             {betsWithoutUser.length > 0 ? "Other Users' Bets" : 'No other bets yet'}
           </h3>
@@ -159,7 +170,7 @@ export default function BetCompare({ bet, onCollapse }: BetCompareProps) {
               )}
             </div>
           )}
-        </div>
+        </div>}
       </div>
     </div>
   );

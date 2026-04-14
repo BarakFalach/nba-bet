@@ -14,10 +14,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Get the event ID and closeTime for this bet
+    // Get the event ID, closeTime and whether this user has placed their bet
     const { data: betData, error: betError } = await supabase
       .from('bets')
-      .select('eventId, closeTime')
+      .select('eventId, closeTime, winnerTeam')
       .eq('id', betId)
       .single();
 
@@ -25,8 +25,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: 'Bet not found' });
     }
 
-    // Hide other users' picks until the betting window closes
-    if (betData.closeTime && new Date(betData.closeTime) > new Date()) {
+    // Hide other users' picks while the window is open AND the user hasn't placed yet.
+    // Once a user locks in their own bet, their pick is final — they can see others'.
+    const windowStillOpen = betData.closeTime && new Date(betData.closeTime) > new Date();
+    const userPlacedBet = betData.winnerTeam !== null;
+    if (windowStillOpen && !userPlacedBet) {
       return res.status(200).json([]);
     }
 
