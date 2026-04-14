@@ -17,6 +17,7 @@ from models import (
     compute_game_numbers,
     map_game_to_event,
     build_series_events,
+    build_special_events,
     calculate_points,
 )
 from sync import _should_create_bet
@@ -574,3 +575,113 @@ class TestShouldCreateBet:
 
     def test_finals_series_true(self):
         assert _should_create_bet(self._ev("finals", "series")) is True
+
+    def test_finals_champion_false(self):
+        assert _should_create_bet(self._ev("finals", "finalsChampion")) is False
+
+    def test_finals_mvp_false(self):
+        assert _should_create_bet(self._ev("finals", "finalsMvp")) is False
+
+
+# ---------------------------------------------------------------------------
+# build_special_events tests
+# ---------------------------------------------------------------------------
+
+def make_series_event(
+    team1: str,
+    team2: str,
+    team1_wins: int,
+    team2_wins: int,
+    round_name: str,
+    status: int,
+) -> dict:
+    key = f"series_{min(team1, team2)}_{max(team1, team2)}"
+    return {
+        "id": key,
+        "parentEvent": key,
+        "team1": team1,
+        "team2": team2,
+        "team1Score": team1_wins,
+        "team2Score": team2_wins,
+        "round": round_name,
+        "eventType": "series",
+        "status": status,
+    }
+
+
+class TestBuildSpecialEvents:
+    def test_finals_champion_created_when_firstround_games_exist(self):
+        games = [make_game(100, "Celtics", "Lakers", "2026-04-20T23:00:00.000Z")]
+        new_events, _ = build_special_events(games, {})
+        assert any(e["id"] == "finalsChampion" for e in new_events)
+        fc = next(e for e in new_events if e["id"] == "finalsChampion")
+        assert fc["startTime"] == "2026-04-20T23:00:00.000Z"
+        assert fc["eventType"] == "finalsChampion"
+        assert fc["round"] == "finals"
+
+    def test_finals_champion_not_created_without_firstround_games(self):
+        # Only play-in games — no firstRound games
+        games = [make_game(200, "Heat", "Bulls", "2026-04-15T23:00:00.000Z")]
+        new_events, _ = build_special_events(games, {})
+        assert not any(e["id"] == "finalsChampion" for e in new_events)
+
+    def test_finals_champion_not_duplicated_when_already_exists(self):
+        games = [make_game(100, "Celtics", "Lakers", "2026-04-20T23:00:00.000Z")]
+        existing = {"finalsChampion": {"id": "finalsChampion", "startTime": "2026-04-20T23:00:00.000Z"}}
+        new_events, _ = build_special_events(games, existing)
+        assert not any(e["id"] == "finalsChampion" for e in new_events)
+
+    def test_finals_champion_uses_earliest_firstround_game(self):
+        games = [
+            make_game(100, "Celtics", "Lakers", "2026-04-22T23:00:00.000Z"),
+            make_game(101, "Warriors", "Thunder", "2026-04-20T20:00:00.000Z"),  # earlier
+        ]
+        new_events, _ = build_special_events(games, {})
+        fc = next(e for e in new_events if e["id"] == "finalsChampion")
+        assert fc["startTime"] == "2026-04-20T20:00:00.000Z"
+
+    def test_finals_mvp_created_when_conference_resolved_and_finals_scheduled(self):
+        from config import STATUS_RESOLVED
+        existing = {
+            "series_Celtics_Heat": make_series_event("Celtics", "Heat", 4, 2, "conference", STATUS_RESOLVED),
+            "series_Lakers_Warriors": make_series_event("Lakers", "Warriors", 4, 1, "conference", STATUS_RESOLVED),
+        }
+        games = [make_game(300, "Celtics", "Lakers", "2026-06-05T01:00:00.000Z")]
+        new_events, _ = build_special_events(games, existing)
+        assert any(e["id"] == "finalsMvp" for e in new_events)
+        mvp = next(e for e in new_events if e["id"] == "finalsMvp")
+        assert mvp["startTime"] == "2026-06-05T01:00:00.000Z"
+        assert mvp["eventType"] == "finalsMvp"
+        assert "Celtics" in (mvp["team1"], mvp["team2"])
+        assert "Lakers" in (mvp["team1"], mvp["team2"])
+
+    def test_finals_mvp_not_created_before_conference_resolves(self):
+        from config import STATUS_IN_PROGRESS
+        existing = {
+            "series_Celtics_Heat": make_series_event("Celtics", "Heat", 3, 2, "conference", STATUS_IN_PROGRESS),
+        }
+        games = [make_game(300, "Celtics", "Lakers", "2026-06-05T01:00:00.000Z")]
+        new_events, _ = build_special_events(games, existing)
+        assert not any(e["id"] == "finalsMvp" for e in new_events)
+
+    def test_finals_mvp_not_created_without_finals_games(self):
+        from config import STATUS_RESOLVED
+        existing = {
+            "series_Celtics_Heat": make_series_event("Celtics", "Heat", 4, 2, "conference", STATUS_RESOLVED),
+            "series_Lakers_Warriors": make_series_event("Lakers", "Warriors", 4, 1, "conference", STATUS_RESOLVED),
+        }
+        # No finals games in BDL yet
+        games = [make_game(100, "Celtics", "Lakers", "2026-04-20T23:00:00.000Z")]
+        new_events, _ = build_special_events(games, existing)
+        assert not any(e["id"] == "finalsMvp" for e in new_events)
+
+    def test_finals_mvp_not_duplicated_when_already_exists(self):
+        from config import STATUS_RESOLVED
+        existing = {
+            "series_Celtics_Heat": make_series_event("Celtics", "Heat", 4, 2, "conference", STATUS_RESOLVED),
+            "series_Lakers_Warriors": make_series_event("Lakers", "Warriors", 4, 1, "conference", STATUS_RESOLVED),
+            "finalsMvp": {"id": "finalsMvp", "startTime": "2026-06-05T01:00:00.000Z"},
+        }
+        games = [make_game(300, "Celtics", "Lakers", "2026-06-05T01:00:00.000Z")]
+        new_events, _ = build_special_events(games, existing)
+        assert not any(e["id"] == "finalsMvp" for e in new_events)

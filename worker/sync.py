@@ -18,7 +18,7 @@ from supabase_client import (
     insert_bets,
     update_bets_points,
 )
-from models import compute_game_numbers, map_game_to_event, build_series_events, calculate_points, detect_round
+from models import compute_game_numbers, map_game_to_event, build_series_events, build_special_events, calculate_points, detect_round
 
 
 # ---------------------------------------------------------------------------
@@ -68,9 +68,12 @@ def _should_create_bet(event: dict) -> bool:
       play-in:           playin/game events (no series — none exist anyway)
       firstRound/second: series events only (users bet on the series, not games)
       conference/finals: both game and series events
+      finalsChampion / finalsMvp: bets live in finals_bet / finals_mvp_bet tables
     """
-    round_name = event.get("round", "")
     event_type = event.get("eventType", "")
+    if event_type in ("finalsChampion", "finalsMvp"):
+        return False
+    round_name = event.get("round", "")
     if round_name in ("firstRound", "secondRound"):
         return event_type == "series"
     return True
@@ -212,8 +215,20 @@ async def sync_all() -> dict:
             if existing_series:
                 resolved_event_states[event_id] = {**existing_series, **update_data}
 
+    # Special events: finalsChampion deadline anchor + finalsMvp (once conference finals resolve)
+    new_special, special_updates = build_special_events(bdl_games, existing_by_parse)
+    inserted_special: list[dict] = []
+    if new_special:
+        inserted_special = insert_events(supabase, new_special)
+        for ev in inserted_special:
+            if ev.get("parentEvent"):
+                existing_by_parse[str(ev["parentEvent"])] = ev
+    for event_id, update_data in special_updates:
+        update_event(supabase, event_id, update_data)
+
+    special_summary = f" · +{len(inserted_special)} special" if inserted_special else ""
     _step(4, "Sync series events",
-          f"+{len(inserted_series)} new · {len(series_updates)} updated")
+          f"+{len(inserted_series)} new · {len(series_updates)} updated{special_summary}")
 
     # ------------------------------------------------------------------
     # Step 5: Create bets for newly added events

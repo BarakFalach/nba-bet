@@ -282,6 +282,89 @@ def _calc_game_points(
     return points_gained, margin_pts
 
 
+def build_special_events(
+    bdl_games: list[dict],
+    existing_events_by_parse: dict[str, dict],
+) -> tuple[list[dict], list[tuple[str, dict]]]:
+    """
+    Build finalsChampion and finalsMvp event rows.
+
+    finalsChampion — created as soon as firstRound games are known.
+      startTime = earliest firstRound game time (betting deadline).
+
+    finalsMvp — created only once both conference finals series are resolved
+      AND Finals games exist in BDL.
+      startTime = earliest Finals game time (betting deadline).
+
+    Returns (new_events, updates) in the same shape as build_series_events.
+    """
+    new_events: list[dict] = []
+    updates: list[tuple[str, dict]] = []
+
+    # -- finalsChampion --
+    firstround_games = sorted(
+        [g for g in bdl_games
+         if detect_round(g.get("datetime") or g.get("date", "")) == "firstRound"],
+        key=lambda g: g.get("datetime") or g.get("date", ""),
+    )
+    if firstround_games and "finalsChampion" not in existing_events_by_parse:
+        deadline = firstround_games[0].get("datetime") or firstround_games[0].get("date", "")
+        new_events.append({
+            "id": "finalsChampion",
+            "parentEvent": "finalsChampion",
+            "team1": "",
+            "team2": "",
+            "team1Score": 0,
+            "team2Score": 0,
+            "startTime": deadline,
+            "status": STATUS_UPCOMING,
+            "eventType": "finalsChampion",
+            "round": "finals",
+            "gameNumber": 0,
+            "season": APP_SEASON,
+        })
+
+    # -- finalsMvp --
+    conference_resolved = [
+        e for e in existing_events_by_parse.values()
+        if e.get("round") == "conference"
+        and e.get("eventType") == "series"
+        and e.get("status") == STATUS_RESOLVED
+    ]
+    finals_games = sorted(
+        [g for g in bdl_games
+         if detect_round(g.get("datetime") or g.get("date", "")) == "finals"],
+        key=lambda g: g.get("datetime") or g.get("date", ""),
+    )
+    if (
+        len(conference_resolved) >= 2
+        and finals_games
+        and "finalsMvp" not in existing_events_by_parse
+    ):
+        def _winner(s: dict) -> str:
+            return s["team1"] if s["team1Score"] > s["team2Score"] else s["team2"]
+
+        t1 = _winner(conference_resolved[0])
+        t2 = _winner(conference_resolved[1])
+        deadline = finals_games[0].get("datetime") or finals_games[0].get("date", "")
+        new_events.append({
+            "id": "finalsMvp",
+            "parentEvent": "finalsMvp",
+            "team1": t1,
+            "team2": t2,
+            "team1Score": 0,
+            "team2Score": 0,
+            "startTime": deadline,
+            "status": STATUS_UPCOMING,
+            "eventType": "finalsMvp",
+            "round": "finals",
+            "gameNumber": 0,
+            "season": APP_SEASON,
+        })
+
+    return new_events, updates
+
+
 def _calc_series_points(
     bet: dict,
     event: dict,
