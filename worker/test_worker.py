@@ -433,7 +433,8 @@ class TestCalculatePointsGame:
         bet = make_bet("Celtics", 10)  # exact diff
         pts, margin = calculate_points(bet, event, [bet])
         assert pts == 2
-        assert margin == 4  # conference correctScoreDifferenceExact
+        assert margin == 2   # bonus = 4 total - 2 winner = 2
+        assert pts + margin == 4  # max for conference game
 
     def test_closest_margin_gets_closest_points(self):
         event = self._game_event()
@@ -441,7 +442,8 @@ class TestCalculatePointsGame:
         bet_b = make_bet("Celtics", 15, "b2")  # delta=5
         pts, margin = calculate_points(bet_a, event, [bet_a, bet_b])
         assert pts == 2
-        assert margin == 3  # conference correctScoreDifferenceClosest
+        assert margin == 1   # bonus = 3 total - 2 winner = 1
+        assert pts + margin == 3
 
     def test_not_closest_gets_zero_margin(self):
         event = self._game_event()
@@ -457,8 +459,8 @@ class TestCalculatePointsGame:
         bet_b = make_bet("Celtics", 12, "b2") # delta=2 — tied
         _, margin_a = calculate_points(bet_a, event, [bet_a, bet_b])
         _, margin_b = calculate_points(bet_b, event, [bet_a, bet_b])
-        assert margin_a == 3
-        assert margin_b == 3
+        assert margin_a == 1  # bonus = 3 total - 2 winner = 1
+        assert margin_b == 1
 
     def test_wrong_winner_ineligible_for_margin(self):
         event = self._game_event()
@@ -473,15 +475,17 @@ class TestCalculatePointsGame:
         event = make_event("Heat", "Bulls", 105, 99, event_type="playin", round_name="playin")
         bet = make_bet("Heat", 6)  # exact diff
         pts, margin = calculate_points(bet, event, [bet])
-        assert pts == 2   # playin correctWinnerPoints
-        assert margin == 4  # playin correctScoreDifferenceExact
+        assert pts == 2          # playin correctWinnerPoints
+        assert margin == 2       # bonus = 4 total - 2 winner = 2
+        assert pts + margin == 4  # max for playin
 
     def test_finals_scoring_scale(self):
         event = make_event("Celtics", "Warriors", 115, 105, event_type="game", round_name="finals")
         bet = make_bet("Celtics", 10)  # exact diff
         pts, margin = calculate_points(bet, event, [bet])
-        assert pts == 4    # finals correctWinnerPoints
-        assert margin == 8  # finals correctScoreDifferenceExact
+        assert pts == 4          # finals correctWinnerPoints
+        assert margin == 4       # bonus = 8 total - 4 winner = 4
+        assert pts + margin == 8  # max for finals game
 
 
 class TestCalculatePointsSeries:

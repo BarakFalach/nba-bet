@@ -62,8 +62,8 @@ STATUS_RESOLVED = 3
 SCORING: dict[str, dict[str, int]] = {
     "playin": {
         "correctWinnerPoints": 2,
-        "correctScoreDifferenceExact": 4,
-        "correctScoreDifferenceClosest": 3,
+        "correctScoreDifferenceExact": 2,   # bonus on top of winner points → 2+2=4 total max
+        "correctScoreDifferenceClosest": 1, # bonus on top of winner points → 2+1=3 total
     },
     "firstRound": {
         "correctWinnerSeries": 4,
@@ -77,14 +77,14 @@ SCORING: dict[str, dict[str, int]] = {
         "correctWinnerSeries": 8,
         "correctWinnerExactGames": 12,
         "correctWinnerPoints": 2,
-        "correctScoreDifferenceExact": 4,
-        "correctScoreDifferenceClosest": 3,
+        "correctScoreDifferenceExact": 2,   # bonus → 2+2=4 total max
+        "correctScoreDifferenceClosest": 1, # bonus → 2+1=3 total
     },
     "finals": {
         "correctWinnerSeries": 12,
         "correctWinnerExactGames": 16,
         "correctWinnerPoints": 4,
-        "correctScoreDifferenceExact": 8,
-        "correctScoreDifferenceClosest": 6,
+        "correctScoreDifferenceExact": 4,   # bonus → 4+4=8 total max
+        "correctScoreDifferenceClosest": 2, # bonus → 4+2=6 total
     },
 }
