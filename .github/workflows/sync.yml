@@ -1,11 +1,12 @@
 name: NBA Bet Sync
 
 on:
-  # Runs every 15 minutes during NBA playoff hours (April–June)
-  # 17:00–23:59 UTC = 1pm–7pm ET  |  00:00–05:00 UTC = 8pm–1am ET
+  # Runs twice daily during NBA playoff season (April–June):
+  #   06:00 UTC = 09:00 Israel (IDT, UTC+3)
+  #   23:00 UTC = 02:00 Israel (IDT, UTC+3)
   schedule:
-    - cron: '*/15 17-23 * 4-6 *'
-    - cron: '*/15 0-5 * 4-6 *'
+    - cron: '0 6 * 4-6 *'
+    - cron: '0 23 * 4-6 *'
 
   workflow_dispatch:
 
