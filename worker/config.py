@@ -18,7 +18,7 @@ EVENTS_ONLY = os.environ.get("EVENTS_ONLY", "false").lower() == "true"
 # When set, bets are only created for these users — useful for verifying
 # events and scoring before rolling out to all users.
 # Leave unset (or empty) to create bets for everyone.
-_target_raw = os.environ.get("TARGET_USER_IDS", "2")
+_target_raw = os.environ.get("TARGET_USER_IDS", "")
 TARGET_USER_IDS: list[str] | None = (
     [u.strip() for u in _target_raw.split(",") if u.strip()]
     if _target_raw.strip()
