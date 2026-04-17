@@ -35,8 +35,13 @@ def update_event(supabase: Client, event_id: str, updates: dict) -> dict | None:
 
 
 def fetch_all_user_ids(supabase: Client) -> list[str]:
-    """Return all user UUIDs from the users table."""
-    response = supabase.table("users").select("uuid").execute()
+    """Return UUIDs of all active users (is_active = true)."""
+    response = (
+        supabase.table("users")
+        .select("uuid")
+        .eq("is_active", True)
+        .execute()
+    )
     return [row["uuid"] for row in (response.data or [])]
 
 

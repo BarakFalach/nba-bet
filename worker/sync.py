@@ -139,8 +139,10 @@ async def sync_all() -> dict:
     _step(2, "Load events & bets",
           f"{len(existing_events)} events · {len(existing_bet_pairs)} bets")
 
-    # Compute game numbers within each matchup
-    game_number_map = compute_game_numbers(bdl_games)
+    # Compute game numbers and rounds within each matchup.
+    # Round is derived from the matchup's first game so that a late Game 7
+    # isn't mis-classified as the next round when calendar windows overlap.
+    game_number_map, game_round_map = compute_game_numbers(bdl_games)
 
     # Track events that resolved in this run — needed for Step 6
     resolved_event_states: dict[str, dict] = {}
@@ -154,10 +156,11 @@ async def sync_all() -> dict:
     for game in bdl_games:
         parse_key = str(game["id"])
         game_number = game_number_map.get(game["id"], 1)
+        round_name = game_round_map.get(game["id"], "firstRound")
         existing = existing_by_parse.get(parse_key)
 
         if existing is None:
-            new_game_events.append(map_game_to_event(game, game_number))
+            new_game_events.append(map_game_to_event(game, game_number, round_name))
         else:
             bdl_status = game.get("status", "")
             period = game.get("period", 0)

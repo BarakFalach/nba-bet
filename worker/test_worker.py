@@ -85,8 +85,13 @@ class TestDetectRound:
     def test_boundary_playin_end(self):
         assert detect_round("2026-04-17T23:59:59Z") == "playin"
 
+    def test_boundary_late_playin_game_utc_next_day(self):
+        # 10pm ET April 17 = 02:00 UTC April 18 — still play-in, not first round
+        assert detect_round("2026-04-18T02:00:00Z") == "playin"
+
     def test_boundary_first_round_start(self):
-        assert detect_round("2026-04-18T00:00:00Z") == "firstRound"
+        # 1pm ET April 18 = 17:00 UTC April 18 — first round
+        assert detect_round("2026-04-18T17:00:00Z") == "firstRound"
 
     def test_invalid_date_falls_back(self):
         assert detect_round("not-a-date") == "firstRound"
@@ -127,10 +132,10 @@ class TestComputeGameNumbers:
             make_game(101, "Celtics", "Lakers", "2026-04-22T23:00:00.000Z"),
             make_game(102, "Lakers", "Celtics", "2026-04-24T23:00:00.000Z"),
         ]
-        result = compute_game_numbers(games)
-        assert result[100] == 1
-        assert result[101] == 2
-        assert result[102] == 3
+        game_number_map, _ = compute_game_numbers(games)
+        assert game_number_map[100] == 1
+        assert game_number_map[101] == 2
+        assert game_number_map[102] == 3
 
     def test_two_matchups_numbered_independently(self):
         games = [
@@ -138,10 +143,10 @@ class TestComputeGameNumbers:
             make_game(101, "Celtics", "Lakers", "2026-04-22T23:00:00.000Z"),
             make_game(200, "Warriors", "Thunder", "2026-04-20T20:00:00.000Z"),
         ]
-        result = compute_game_numbers(games)
-        assert result[100] == 1
-        assert result[101] == 2
-        assert result[200] == 1
+        game_number_map, _ = compute_game_numbers(games)
+        assert game_number_map[100] == 1
+        assert game_number_map[101] == 2
+        assert game_number_map[200] == 1
 
     def test_home_away_swap_same_matchup(self):
         """Games between same teams count as one matchup regardless of home/away."""
@@ -149,14 +154,24 @@ class TestComputeGameNumbers:
             make_game(100, "Celtics", "Lakers", "2026-04-20T23:00:00.000Z"),
             make_game(101, "Lakers", "Celtics", "2026-04-22T23:00:00.000Z"),
         ]
-        result = compute_game_numbers(games)
-        assert result[100] == 1
-        assert result[101] == 2
+        game_number_map, _ = compute_game_numbers(games)
+        assert game_number_map[100] == 1
+        assert game_number_map[101] == 2
 
     def test_single_game(self):
         games = [make_game(100, "Heat", "Bucks", "2026-04-20T20:00:00.000Z")]
-        result = compute_game_numbers(games)
-        assert result[100] == 1
+        game_number_map, _ = compute_game_numbers(games)
+        assert game_number_map[100] == 1
+
+    def test_round_derived_from_first_game_in_matchup(self):
+        """A late Game 7 (May 6) in a first-round series must stay firstRound."""
+        games = [
+            make_game(100, "Celtics", "Lakers", "2026-04-19T17:00:00Z"),  # firstRound
+            make_game(101, "Celtics", "Lakers", "2026-05-06T23:00:00Z"),  # would be secondRound by date alone
+        ]
+        _, game_round_map = compute_game_numbers(games)
+        assert game_round_map[100] == "firstRound"
+        assert game_round_map[101] == "firstRound"  # same matchup → same round
 
 
 # ---------------------------------------------------------------------------
@@ -169,7 +184,7 @@ class TestMapGameToEvent:
             100, "Celtics", "Lakers", "2026-04-20T23:00:00.000Z",
             status="Final", period=4, home_score=110, visitor_score=98,
         )
-        ev = map_game_to_event(game, game_number=1)
+        ev = map_game_to_event(game, game_number=1, round_name="firstRound")
 
         assert ev["id"] == "100"
         assert ev["team1"] == "Celtics"
@@ -188,7 +203,7 @@ class TestMapGameToEvent:
             101, "Celtics", "Lakers", "2026-04-22T23:00:00.000Z",
             status="7:00 pm ET", period=0,
         )
-        ev = map_game_to_event(game, game_number=2)
+        ev = map_game_to_event(game, game_number=2, round_name="firstRound")
 
         assert ev["status"] == STATUS_UPCOMING
         assert ev["team1Score"] == 0
@@ -200,7 +215,7 @@ class TestMapGameToEvent:
             102, "Warriors", "Thunder", "2026-04-20T20:00:00.000Z",
             status="3rd Qtr", period=3, home_score=78, visitor_score=72,
         )
-        ev = map_game_to_event(game, game_number=1)
+        ev = map_game_to_event(game, game_number=1, round_name="firstRound")
 
         assert ev["status"] == STATUS_IN_PROGRESS
         assert ev["team1Score"] == 78
@@ -211,7 +226,7 @@ class TestMapGameToEvent:
             200, "Heat", "Bulls", "2026-04-15T23:00:00.000Z",
             status="7:00 pm ET", period=0,
         )
-        ev = map_game_to_event(game, game_number=1)
+        ev = map_game_to_event(game, game_number=1, round_name="playin")
 
         assert ev["eventType"] == "playin"
         assert ev["round"] == "playin"
@@ -221,7 +236,7 @@ class TestMapGameToEvent:
             300, "Celtics", "Warriors", "2026-06-05T01:00:00.000Z",
             status="Final", period=4, home_score=105, visitor_score=99,
         )
-        ev = map_game_to_event(game, game_number=3)
+        ev = map_game_to_event(game, game_number=3, round_name="finals")
 
         assert ev["round"] == "finals"
         assert ev["eventType"] == "game"

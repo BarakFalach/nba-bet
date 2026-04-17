@@ -1,5 +1,8 @@
-from datetime import date
+from datetime import date, timezone, timedelta
 from collections import defaultdict
+
+# EDT (UTC-4) is in effect for the entire playoff window (April–June).
+EASTERN = timezone(timedelta(hours=-4))
 
 from dateutil.parser import parse as parse_date
 
@@ -23,7 +26,13 @@ def detect_round(game_date_str: str) -> str:
     Falls back to 'firstRound' if the date doesn't match any configured range.
     """
     try:
-        game_date = parse_date(game_date_str).date()
+        dt = parse_date(game_date_str)
+        # BDL datetimes are UTC. Convert to Eastern Time before extracting the
+        # date so that late-night play-in games (e.g. 10pm ET = 02:00 UTC next
+        # day) are not mis-classified as the following round.
+        if dt.tzinfo is not None:
+            dt = dt.astimezone(EASTERN)
+        game_date = dt.date()
     except (ValueError, TypeError):
         return "firstRound"
 
@@ -55,13 +64,17 @@ def detect_event_type(round_name: str) -> str:
 # Game-number derivation
 # ---------------------------------------------------------------------------
 
-def compute_game_numbers(games: list[dict]) -> dict[int, int]:
+def compute_game_numbers(games: list[dict]) -> tuple[dict[int, int], dict[int, str]]:
     """
-    For each game, compute its game number within the series (matchup).
-    Returns a mapping of BDL game_id -> game_number.
+    For each game, compute its game number within the series (matchup) and
+    its playoff round.  Returns two mappings keyed by BDL game_id:
+      - game_number_map  : game_id -> game number (1-indexed within the matchup)
+      - game_round_map   : game_id -> round name
 
-    Games between the same two teams in the postseason are grouped together,
-    sorted by date, and numbered sequentially.
+    The round is derived from the matchup's *first* game, not each individual
+    game's own date.  This handles the case where rounds overlap in the
+    calendar (e.g. a first-round Game 7 on May 6 while second-round games
+    have already started for other series).
     """
     # Group games by matchup (sorted team names to normalise home/away)
     matchups: dict[tuple[str, str], list[dict]] = defaultdict(list)
@@ -72,21 +85,30 @@ def compute_game_numbers(games: list[dict]) -> dict[int, int]:
         matchups[key].append(game)
 
     game_number_map: dict[int, int] = {}
+    game_round_map: dict[int, str] = {}
     for _key, matchup_games in matchups.items():
         # Sort by datetime so game 1 is earliest
         matchup_games.sort(key=lambda g: g.get("datetime") or g.get("date", ""))
+        first_game_dt = matchup_games[0].get("datetime") or matchup_games[0].get("date", "")
+        round_name = detect_round(first_game_dt)
         for idx, game in enumerate(matchup_games, start=1):
             game_number_map[game["id"]] = idx
+            game_round_map[game["id"]] = round_name
 
-    return game_number_map
+    return game_number_map, game_round_map
 
 
 # ---------------------------------------------------------------------------
 # Map BDL game -> Supabase event row
 # ---------------------------------------------------------------------------
 
-def map_game_to_event(game: dict, game_number: int) -> dict:
-    """Convert a BallDontLie game object to a Supabase event row."""
+def map_game_to_event(game: dict, game_number: int, round_name: str) -> dict:
+    """Convert a BallDontLie game object to a Supabase event row.
+
+    round_name must come from compute_game_numbers so that all games in a
+    matchup share the round of the matchup's first game, rather than being
+    classified individually by date (which breaks when rounds overlap).
+    """
     bdl_status = game.get("status", "")
     period = game.get("period", 0)
 
@@ -97,7 +119,6 @@ def map_game_to_event(game: dict, game_number: int) -> dict:
     else:
         status = STATUS_UPCOMING
 
-    round_name = detect_round(game.get("datetime") or game.get("date", ""))
     event_type = detect_event_type(round_name)
 
     return {
