@@ -15,6 +15,7 @@ from supabase_client import (
     fetch_all_user_ids,
     fetch_existing_bet_pairs,
     fetch_event_bets,
+    fetch_unscored_resolved_event_ids,
     insert_bets,
     update_bets_points,
 )
@@ -74,6 +75,8 @@ def _should_create_bet(event: dict) -> bool:
     if event_type in ("finalsChampion", "finalsMvp"):
         return False
     round_name = event.get("round", "")
+    if round_name == "playin":
+        return event_type != "series"   # play-in has no series, only individual games
     if round_name in ("firstRound", "secondRound"):
         return event_type == "series"
     return True
@@ -282,6 +285,14 @@ async def sync_all() -> dict:
     # ------------------------------------------------------------------
     bets_scored = 0
     events_scored = 0
+
+    # Include events that were already resolved in a previous run but still
+    # have unscored bets (e.g. bets created after the event resolved).
+    for skipped_id in fetch_unscored_resolved_event_ids(supabase):
+        if skipped_id not in resolved_event_states:
+            event_state = existing_by_parse.get(skipped_id)
+            if event_state:
+                resolved_event_states[skipped_id] = event_state
 
     for event_id, event_state in resolved_event_states.items():
         all_bets = fetch_event_bets(supabase, event_id)

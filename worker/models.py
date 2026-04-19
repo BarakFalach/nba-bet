@@ -192,8 +192,12 @@ def build_series_events(
         earliest_datetime = matchup_games[0].get("datetime") or matchup_games[0].get("date", "")
         round_name = detect_round(earliest_datetime)
 
+        # Play-in games are individual events, not series — skip series creation.
+        if round_name == "playin":
+            continue
+
         # Determine series status
-        wins_to_clinch = 1 if round_name == "playin" else 4
+        wins_to_clinch = 4
         if team1_wins >= wins_to_clinch or team2_wins >= wins_to_clinch:
             series_status = STATUS_RESOLVED
         elif team1_wins + team2_wins > 0:

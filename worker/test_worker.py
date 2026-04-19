@@ -301,17 +301,18 @@ class TestBuildSeriesEvents:
         assert cel_lak["team1Score"] == 4
         assert cel_lak["status"] == STATUS_RESOLVED
 
-    def test_playin_series_resolved_at_1_win(self):
+    def test_playin_games_not_grouped_into_series(self):
+        # Play-in is single-elimination — no series events should be created.
         games = [
             make_game(
                 300, "Heat", "Bulls", "2026-04-15T23:00:00.000Z",
                 status="Final", period=4, home_score=105, visitor_score=99,
             ),
         ]
-        new_series, _ = build_series_events(games, {})
+        new_series, updates = build_series_events(games, {})
 
-        series = new_series[0]
-        assert series["status"] == STATUS_RESOLVED  # 1 win clinches play-in
+        assert new_series == []
+        assert updates == []
 
     def test_series_upcoming_no_games_finished(self):
         games = [

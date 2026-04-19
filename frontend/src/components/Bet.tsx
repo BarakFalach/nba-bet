@@ -15,7 +15,7 @@ interface BetProps {
 
 export default function Bet(props: BetProps) {
   const { bet } = props;
-  const { team1, team2, startTime, eventType, gameNumber } = bet?.events;
+  const { team1, team2, startTime, eventType, gameNumber, status, team1Score, team2Score } = bet?.events;
   const [isPlaceBetOpen, setIsPlaceBetOpen] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
 
@@ -106,6 +106,26 @@ export default function Bet(props: BetProps) {
             {/* Match Info */}
             <div className="text-center flex flex-col items-center space-y-1">
               <p className="text-gray-700 dark:text-gray-300">{formattedDate} • {formattedTime}</p>
+
+              {/* Live / current score when event is in progress */}
+              {status === 2 && (
+                <div className="flex items-center gap-2 px-3 py-1 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                  {isGameType ? (
+                    <span className="text-sm font-bold text-gray-800 dark:text-gray-100">
+                      {team1Score} – {team2Score}
+                    </span>
+                  ) : (
+                    <span className="text-sm font-bold text-gray-800 dark:text-gray-100">
+                      {team1Score === team2Score
+                        ? `Tied ${team1Score}–${team2Score}`
+                        : team1Score > team2Score
+                        ? `${team1} lead ${team1Score}–${team2Score}`
+                        : `${team2} lead ${team2Score}–${team1Score}`}
+                    </span>
+                  )}
+                </div>
+              )}
 
               {/* Team Bet Status */}
               {!bet.winnerTeam ? (

@@ -56,6 +56,24 @@ def fetch_existing_bet_pairs(supabase: Client) -> set[tuple[str, str]]:
     return {(row["eventId"], str(row["userId"])) for row in (response.data or [])}
 
 
+def fetch_unscored_resolved_event_ids(supabase: Client) -> list[str]:
+    """Return event IDs that are resolved but still have unscored placed bets.
+
+    Used to catch events that were already resolved when their bets were
+    created — the normal transition-based scoring would never pick these up.
+    """
+    response = (
+        supabase.table("bets")
+        .select("eventId, events!inner(status, season)")
+        .is_("pointsGained", "null")
+        .not_.is_("winnerTeam", "null")
+        .eq("events.status", 3)          # STATUS_RESOLVED
+        .eq("events.season", APP_SEASON)
+        .execute()
+    )
+    return list({row["eventId"] for row in (response.data or [])})
+
+
 def fetch_event_bets(supabase: Client, event_id: str) -> list[dict]:
     """Fetch all bet rows for a specific event."""
     response = (

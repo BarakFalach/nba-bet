@@ -57,7 +57,7 @@ export function useBets() {
   );
 
   const placedBets = bets?.filter((bet: EnhancedBet) =>
-    bet.winnerTeam !== null && bet.winMargin !== null && bet.result === null && bet.events.status === 1
+    bet.winnerTeam !== null && bet.winMargin !== null && bet.result === null && bet.events.status !== 3
   )
 
   const resolvedBets = bets?.filter((bet: EnhancedBet) => 
