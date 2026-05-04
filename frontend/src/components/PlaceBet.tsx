@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Logo from './Logo';
 import { usePlaceBet } from '@/hooks/usePlaceBet';
 import { EnhancedBet } from '@/hooks/useBets';
 import { XCircleIcon } from '@heroicons/react/24/solid';
+import { nbaTeamColors } from '@/lib/teamColors';
 
 interface PlaceBetProps {
   bet: EnhancedBet;
@@ -16,6 +17,21 @@ const PlaceBet: React.FC<PlaceBetProps> = ({ bet, onClose }) => {
 
   // Determine if this is a game-type event (game or playin) or a series
   const isGameType = bet.events.eventType === 'game' || bet.events.eventType === 'playin';
+
+  const team1Color = nbaTeamColors[bet.events.team1 as keyof typeof nbaTeamColors] || '#3B82F6';
+  const team2Color = nbaTeamColors[bet.events.team2 as keyof typeof nbaTeamColors] || '#EF4444';
+
+  const withOpacity = (hexColor: string, opacity: number) => {
+    const hex = hexColor.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  };
+
+  const headerGradient = useMemo(() => ({
+    background: `linear-gradient(135deg, ${withOpacity(team1Color, 0.5)} 0%, ${withOpacity(team1Color, 0.2)} 49%, ${withOpacity(team2Color, 0.2)} 51%, ${withOpacity(team2Color, 0.5)} 100%)`,
+  }), [team1Color, team2Color]);
 
   // Direct placement without confirmation
   const handlePlaceBet = async () => {
@@ -112,46 +128,66 @@ const PlaceBet: React.FC<PlaceBetProps> = ({ bet, onClose }) => {
         )}
 
         {/* Event Info */}
-        <div className="text-center mb-6">
-          <p className="text-gray-700 dark:text-gray-300">
-            <span className="font-semibold">{bet.events.team1}</span> vs{' '}
-            <span className="font-semibold">{bet.events.team2}</span>
-          </p>
-          {/* Game Number Indicator */}
-          {isGameType && bet.events.gameNumber && (
-            <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 mt-1">
-              Game {bet.events.gameNumber}
-            </p>
-          )}
+        <div style={headerGradient} className="rounded-lg mb-6 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col items-center gap-1">
+              <Logo teamName={bet.events.team1} />
+              <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{bet.events.team1}</span>
+            </div>
+            <div className="text-center">
+              <p className="text-gray-700 dark:text-gray-300 font-semibold">vs</p>
+              {isGameType && bet.events.gameNumber && (
+                <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mt-1">
+                  Game {bet.events.gameNumber}
+                </p>
+              )}
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <Logo teamName={bet.events.team2} />
+              <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{bet.events.team2}</span>
+            </div>
+          </div>
         </div>
 
         {/* Team Selection */}
         <div className="flex flex-col gap-2 mb-6">
           <button
+            style={selectedTeam === bet.events.team1
+              ? { backgroundColor: team1Color, color: '#fff' }
+              : { backgroundColor: withOpacity(team1Color, 0.15) }
+            }
             className={`flex items-center justify-start py-3 px-4 rounded-lg text-lg font-semibold transition-all ${
               selectedTeam === bet.events.team1
-                ? 'bg-blue-400 text-white shadow-lg scale-105'
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 hover:scale-105 active:scale-95'
+                ? 'shadow-lg scale-105'
+                : 'text-gray-900 dark:text-gray-100 hover:scale-105 active:scale-95'
             }`}
             onClick={() => setSelectedTeam(bet.events.team1)}
             disabled={isLoading}
           >
             <div className="flex items-center gap-6">
-              <Logo teamName={bet.events.team1} />
+              <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
+                <Logo teamName={bet.events.team1} />
+              </div>
               <span>{bet.events.team1}</span>
             </div>
           </button>
           <button
+            style={selectedTeam === bet.events.team2
+              ? { backgroundColor: team2Color, color: '#fff' }
+              : { backgroundColor: withOpacity(team2Color, 0.15) }
+            }
             className={`flex items-center justify-start py-3 px-4 rounded-lg text-lg font-semibold transition-all ${
               selectedTeam === bet.events.team2
-                ? 'bg-blue-400 text-white shadow-lg scale-105'
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 hover:scale-105 active:scale-95'
+                ? 'shadow-lg scale-105'
+                : 'text-gray-900 dark:text-gray-100 hover:scale-105 active:scale-95'
             }`}
             onClick={() => setSelectedTeam(bet.events.team2)}
             disabled={isLoading}
           >
             <div className="flex items-center gap-6">
-              <Logo teamName={bet.events.team2} />
+              <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
+                <Logo teamName={bet.events.team2} />
+              </div>
               <span>{bet.events.team2}</span>
             </div>
           </button>

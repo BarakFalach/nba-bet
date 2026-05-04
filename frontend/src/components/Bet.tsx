@@ -59,7 +59,6 @@ export default function Bet(props: BetProps) {
         } 
         return {
           background: `linear-gradient(135deg, ${withOpacity(team1Color, 0.5)} 0%, ${withOpacity(team1Color, 0.2)} 49%, ${withOpacity(team2Color, 0.2)} 51%, ${withOpacity(team2Color, 0.5)} 100%)`,
-          border: '2px solid #3B82F6', // Keep the blue border
         }
       }, [bet.winnerTeam, team1Color, team2Color]);
 
@@ -69,10 +68,6 @@ export default function Bet(props: BetProps) {
         style={backgroundStyle}
         className={`flex flex-col items-center justify-center p-4 relative ${
           showCompare ? 'rounded-t-xl' : 'rounded-xl'
-        } ${
-          bet.winnerTeam
-            ? 'dark:bg-opacity-90 dark:bg-gray-800' // Dark mode background for placed bets
-            : 'dark:bg-blue-900/30' // Dark mode highlight for unplaced bets
         }`}
         onClick={() => {
           if (bet.winnerTeam === null) {
@@ -80,9 +75,6 @@ export default function Bet(props: BetProps) {
           }
         }}
       >
-        {/* Create a semi-transparent overlay for better readability in dark mode */}
-        <div className="absolute inset-0 bg-white dark:bg-gray-800 opacity-0 dark:opacity-60 rounded-xl pointer-events-none"></div>
-        
         <div className="absolute top-0 left-0 z-4">
           <EventType bet={bet} />
         </div>
