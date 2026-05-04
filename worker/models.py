@@ -64,6 +64,23 @@ def detect_event_type(round_name: str) -> str:
 # Game-number derivation
 # ---------------------------------------------------------------------------
 
+def _majority_round(matchup_games: list[dict]) -> str:
+    """
+    Pick the playoff round for a matchup via majority vote across all games.
+
+    BDL sometimes uses placeholder datetimes (midnight or 1:30am UTC) for
+    not-yet-scheduled games.  These cross the ET date boundary and can cause
+    one or two games to be mis-classified as the previous round.  Voting
+    across all games in the series means a single placeholder can't override
+    the correct round detected from confirmed game times.
+    """
+    votes: dict[str, int] = defaultdict(int)
+    for g in matchup_games:
+        dt_str = g.get("datetime") or g.get("date", "")
+        votes[detect_round(dt_str)] += 1
+    return max(votes, key=lambda r: votes[r])
+
+
 def compute_game_numbers(games: list[dict]) -> tuple[dict[int, int], dict[int, str]]:
     """
     For each game, compute its game number within the series (matchup) and
@@ -71,10 +88,10 @@ def compute_game_numbers(games: list[dict]) -> tuple[dict[int, int], dict[int, s
       - game_number_map  : game_id -> game number (1-indexed within the matchup)
       - game_round_map   : game_id -> round name
 
-    The round is derived from the matchup's *first* game, not each individual
-    game's own date.  This handles the case where rounds overlap in the
-    calendar (e.g. a first-round Game 7 on May 6 while second-round games
-    have already started for other series).
+    The round is determined by majority vote across all games in the matchup.
+    This handles both calendar overlap (a first-round Game 7 on May 6 while
+    second-round games have started) and BDL placeholder times (midnight UTC
+    for unscheduled games that cross the ET date boundary).
     """
     # Group games by matchup (sorted team names to normalise home/away)
     matchups: dict[tuple[str, str], list[dict]] = defaultdict(list)
@@ -89,8 +106,7 @@ def compute_game_numbers(games: list[dict]) -> tuple[dict[int, int], dict[int, s
     for _key, matchup_games in matchups.items():
         # Sort by datetime so game 1 is earliest
         matchup_games.sort(key=lambda g: g.get("datetime") or g.get("date", ""))
-        first_game_dt = matchup_games[0].get("datetime") or matchup_games[0].get("date", "")
-        round_name = detect_round(first_game_dt)
+        round_name = _majority_round(matchup_games)
         for idx, game in enumerate(matchup_games, start=1):
             game_number_map[game["id"]] = idx
             game_round_map[game["id"]] = round_name
@@ -190,7 +206,7 @@ def build_series_events(
 
         total_games = team1_wins + team2_wins
         earliest_datetime = matchup_games[0].get("datetime") or matchup_games[0].get("date", "")
-        round_name = detect_round(earliest_datetime)
+        round_name = _majority_round(matchup_games)
 
         # Play-in games are individual events, not series — skip series creation.
         if round_name == "playin":
@@ -210,12 +226,13 @@ def build_series_events(
 
         existing = existing_events_by_parse.get(series_parse_key)
         if existing:
-            # Update existing series event
+            # Update existing series event — never update `round` (preserves manual DB fixes).
             update_data = {
                 "team1Score": team1_wins,
                 "team2Score": team2_wins,
                 "status": series_status,
                 "gameNumber": total_games,
+                "startTime": earliest_datetime,
             }
             updates.append((existing["id"], update_data))
         else:
