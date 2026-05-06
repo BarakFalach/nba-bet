@@ -17,6 +17,7 @@ const PlaceBet: React.FC<PlaceBetProps> = ({ bet, onClose }) => {
 
   // Determine if this is a game-type event (game or playin) or a series
   const isGameType = bet.events.eventType === 'game' || bet.events.eventType === 'playin';
+  const isEditing = bet.winnerTeam !== null;
 
   const team1Color = nbaTeamColors[bet.events.team1 as keyof typeof nbaTeamColors] || '#3B82F6';
   const team2Color = nbaTeamColors[bet.events.team2 as keyof typeof nbaTeamColors] || '#EF4444';
@@ -96,14 +97,9 @@ const PlaceBet: React.FC<PlaceBetProps> = ({ bet, onClose }) => {
         </button>
 
         {/* Title */}
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 text-center mb-2">
-          Place Your Bet
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 text-center mb-4">
+          {isEditing ? 'Edit Your Bet' : 'Place Your Bet'}
         </h2>
-
-        {/* Subtle notice about bet finality */}
-        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mb-4 italic">
-          Once submitted, bets cannot be changed
-        </p>
 
         {/* Error display */}
         {error && (
@@ -246,14 +242,6 @@ const PlaceBet: React.FC<PlaceBetProps> = ({ bet, onClose }) => {
           </div>
         )}
 
-        {/* Visual finality indicator - icon and subtle message */}
-        <div className="flex items-center justify-center mb-4 text-sm text-amber-600 dark:text-amber-400">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-          </svg>
-          Finality notice: Your bet will be permanent
-        </div>
-
         {/* Action Buttons */}
         <div className="flex gap-4 justify-center mt-4">
           <button
@@ -275,7 +263,7 @@ const PlaceBet: React.FC<PlaceBetProps> = ({ bet, onClose }) => {
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
-                <span>Place Final Bet</span>
+                <span>{isEditing ? 'Update Bet' : 'Place Bet'}</span>
               </>
             )}
           </button>

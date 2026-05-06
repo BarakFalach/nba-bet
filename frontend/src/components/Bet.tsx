@@ -36,6 +36,10 @@ export default function Bet(props: BetProps) {
   // Determine if this is a game-type event (game or playin) or a series
   const isGameType = eventType === 'game' || eventType === 'playin';
 
+  // Bet is editable until the event's startTime has passed —
+  // same gate used by useBets to decide what shows in the Open Bets tab.
+  const isEditable = startTime ? new Date() < new Date(startTime) : false;
+
   // Get team colors from the nbaTeamColors map (with fallbacks)
   const team1Color = nbaTeamColors[team1 as keyof typeof nbaTeamColors] || '#3B82F6';
   const team2Color = nbaTeamColors[team2 as keyof typeof nbaTeamColors] || '#EF4444';
@@ -68,9 +72,9 @@ export default function Bet(props: BetProps) {
         style={backgroundStyle}
         className={`flex flex-col items-center justify-center p-4 relative ${
           showCompare ? 'rounded-t-xl' : 'rounded-xl'
-        }`}
+        } ${isEditable ? 'cursor-pointer' : 'cursor-default'}`}
         onClick={() => {
-          if (bet.winnerTeam === null) {
+          if (isEditable) {
             setIsPlaceBetOpen(true);
           }
         }}
@@ -121,11 +125,16 @@ export default function Bet(props: BetProps) {
 
               {/* Team Bet Status */}
               {!bet.winnerTeam ? (
-                <p className="text-blue-600 dark:text-blue-300 font-semibold">
-                  Place Your Bet!
-                </p>
+                <>
+                  <p className="text-blue-600 dark:text-blue-300 font-semibold">
+                    Place Your Bet!
+                  </p>
+                  <p className="text-blue-600 dark:text-blue-300 font-semibold text-sm">
+                    {isGameType ? 'Set point difference' : 'Set series length'}
+                  </p>
+                </>
               ) : (
-                <div className="px-3 py-1 rounded-lg">
+                <div className="px-3 py-1 rounded-lg text-center">
                   <p className="text-green-700 dark:text-green-300 font-semibold">
                     You bet on <span className="font-bold">{bet.winnerTeam}</span>
                   </p>
@@ -140,14 +149,14 @@ export default function Bet(props: BetProps) {
                       )}
                     </p>
                   )}
-                </div>
-              )}
 
-              {/* Only show prompt if no team is selected */}
-              {!bet.winnerTeam && !bet.winMargin && (
-                <p className="text-blue-600 dark:text-blue-300 font-semibold text-sm">
-                  {isGameType ? 'Set point difference' : 'Set series length'}
-                </p>
+                  {/* Edit hint – only while game hasn't started */}
+                  {isEditable && (
+                    <p className="text-blue-500 dark:text-blue-400 text-xs mt-1">
+                      Tap to change your bet
+                    </p>
+                  )}
+                </div>
               )}
             </div>
 
@@ -158,8 +167,8 @@ export default function Bet(props: BetProps) {
             </div>
           </div>
 
-          {/* Only show compare button if bet is placed */}
-          {bet.winnerTeam && (
+          {/* Compare button – only available once the game has started */}
+          {bet.winnerTeam && !isEditable && (
             <div className="mt-2 flex justify-center z-4 relative">
               <button
                 onClick={(e) => {
@@ -186,7 +195,7 @@ export default function Bet(props: BetProps) {
       </div>
 
       {/* Expanded comparison section */}
-      {showCompare && bet.winnerTeam && (
+      {showCompare && bet.winnerTeam && !isEditable && (
         <BetCompare bet={bet} onCollapse={() => setShowCompare(false)} />
       )}
 
