@@ -8,4 +8,5 @@ export enum QueryKeys {
   OVERALL_BET_COMPARE = 'overallBetCompare',
   FINALS_BET = 'finalsBet',
   FINALS_MVP_BET = 'finalsMvpBet',
+  PLAYOFF_BRACKET = 'playoffBracket',
 }

@@ -9,6 +9,7 @@ import {
   TrophyIcon,
   ClockIcon,
   BookOpenIcon,
+  Squares2X2Icon,
 } from '@heroicons/react/24/outline';
 import { WithProviders } from '@/lib/providers';
 import { usePathname } from 'next/navigation';
@@ -113,6 +114,17 @@ function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
             >
               <ClockIcon className="h-5 w-5 mr-1" />
               <span>History</span>
+            </Link>
+            <Link
+              href="/playoff-bracket"
+              className={`flex items-center px-4 py-2 ml-2 rounded-lg transition-colors flex-shrink-0 ${
+                pathname?.includes('/playoff-bracket')
+                  ? 'bg-blue-500 text-white'
+                  : 'text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              <Squares2X2Icon className="h-5 w-5 mr-1" />
+              <span>Bracket</span>
             </Link>
             <Link
               href="/leaderboard"
