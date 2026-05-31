@@ -11,6 +11,16 @@ interface FinalsMvpBet {
   created_at: string;
 }
 
+interface FinalsTeams {
+  team1: string;
+  team2: string;
+}
+
+export interface FinalsPlayer {
+  playerId: number;
+  playerName: string;
+}
+
 type MvpBetStatus = 'pending_finals' | 'open' | 'closed';
 
 interface FinalsMvpQueryResult {
@@ -20,10 +30,11 @@ interface FinalsMvpQueryResult {
   finalsMvpPlayer: string;
   isBetOpen: boolean;
   betStatus: MvpBetStatus;
+  finalsTeams: FinalsTeams | null;
 }
 
 interface FinalsMvpMutationResult {
-  placeBet: (playerName: string) => Promise<FinalsMvpBet>;
+  placeBet: (selection: FinalsPlayer) => Promise<FinalsMvpBet>;
   isPlacing: boolean;
   error: Error | null;
 }
@@ -41,7 +52,12 @@ export function useFinalsMvpBet(): FinalsMvpQueryResult & FinalsMvpMutationResul
     data: queryData = null,
     isLoading,
     isError,
-  } = useQuery<{ bet: FinalsMvpBet | null; isOpen: boolean; betStatus: MvpBetStatus } | null>({
+  } = useQuery<{
+    bet: FinalsMvpBet | null;
+    isOpen: boolean;
+    betStatus: MvpBetStatus;
+    finalsTeams: FinalsTeams | null;
+  } | null>({
     queryKey: [QueryKeys.FINALS_MVP_BET, userId, season],
     queryFn: async () => {
       if (!userId) return null;
@@ -61,8 +77,8 @@ export function useFinalsMvpBet(): FinalsMvpQueryResult & FinalsMvpMutationResul
     mutateAsync: placeBet,
     isPending: isPlacing,
     error,
-  } = useMutation<FinalsMvpBet, Error, string>({
-    mutationFn: async (playerName: string) => {
+  } = useMutation<FinalsMvpBet, Error, FinalsPlayer>({
+    mutationFn: async (selection: FinalsPlayer) => {
       if (!userId) {
         throw new Error('User not authenticated');
       }
@@ -70,7 +86,12 @@ export function useFinalsMvpBet(): FinalsMvpQueryResult & FinalsMvpMutationResul
       const response = await fetch('/api/finalsMvpBet', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, playerName, season }),
+        body: JSON.stringify({
+          userId,
+          playerId: selection.playerId,
+          playerName: selection.playerName,
+          season,
+        }),
       });
 
       if (!response.ok) {
@@ -83,8 +104,15 @@ export function useFinalsMvpBet(): FinalsMvpQueryResult & FinalsMvpMutationResul
     onSuccess: (newBet) => {
       queryClient.setQueryData(
         [QueryKeys.FINALS_MVP_BET, userId, season],
-        (prev: { bet: FinalsMvpBet | null; isOpen: boolean; betStatus: MvpBetStatus } | null) =>
-          prev ? { ...prev, bet: newBet } : { bet: newBet, isOpen: false, betStatus: 'closed' as MvpBetStatus },
+        (prev: {
+          bet: FinalsMvpBet | null;
+          isOpen: boolean;
+          betStatus: MvpBetStatus;
+          finalsTeams: FinalsTeams | null;
+        } | null) =>
+          prev
+            ? { ...prev, bet: newBet }
+            : { bet: newBet, isOpen: false, betStatus: 'closed' as MvpBetStatus, finalsTeams: null },
       );
       queryClient.invalidateQueries({ queryKey: [QueryKeys.FINALS_MVP_BET] });
     },
@@ -97,10 +125,30 @@ export function useFinalsMvpBet(): FinalsMvpQueryResult & FinalsMvpMutationResul
     isError,
     isBetOpen: queryData?.isOpen ?? false,
     betStatus: queryData?.betStatus ?? 'pending_finals',
+    finalsTeams: queryData?.finalsTeams ?? null,
     placeBet,
     isPlacing,
     error,
   };
+}
+
+export function useFinalsMvpTeamRoster(teamName: string | null) {
+  const { season } = useSeason();
+
+  return useQuery<{ players: FinalsPlayer[] }>({
+    queryKey: [QueryKeys.FINALS_MVP_BET, 'roster', teamName, season],
+    queryFn: async () => {
+      const response = await fetch(
+        `/api/finalsMvpBet?teamName=${encodeURIComponent(teamName!)}&season=${season}`,
+      );
+      if (!response.ok) {
+        throw new Error('Failed to fetch team roster');
+      }
+      return response.json();
+    },
+    enabled: !!teamName,
+    staleTime: 1000 * 60 * 30,
+  });
 }
 
 export default useFinalsMvpBet;
