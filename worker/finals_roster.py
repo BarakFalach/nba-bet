@@ -2,22 +2,12 @@
 
 from __future__ import annotations
 
-import httpx
+import time
+
+from nba_api.stats.endpoints import commonteamroster
 from supabase import Client
 
 from config import APP_SEASON
-
-NBA_STATS_HEADERS = {
-    "Accept": "application/json, text/plain, */*",
-    "Accept-Language": "en-US,en;q=0.9",
-    "User-Agent": (
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    ),
-    "x-nba-stats-origin": "stats",
-    "x-nba-stats-token": "true",
-    "Referer": "https://www.nba.com/",
-}
 
 # App team name -> stats.nba.com TeamID
 NBA_TEAM_IDS: dict[str, int] = {
@@ -58,40 +48,36 @@ def to_nba_season_string(app_season: int) -> str:
     return f"{app_season - 1}-{str(app_season)[-2:]}"
 
 
-def fetch_team_roster_from_nba(client: httpx.Client, team_name: str, app_season: int) -> list[dict]:
-    """Fetch current roster for a team from stats.nba.com."""
+def fetch_team_roster_from_nba(team_name: str, app_season: int = APP_SEASON) -> list[dict]:
+    """Fetch current roster from stats.nba.com (one request per team)."""
     team_id = NBA_TEAM_IDS.get(team_name)
     if team_id is None:
         raise ValueError(f"Unknown team: {team_name}")
 
-    response = client.get(
-        "https://stats.nba.com/stats/commonteamroster",
-        params={"TeamID": team_id, "Season": to_nba_season_string(app_season)},
-        headers=NBA_STATS_HEADERS,
-        timeout=15.0,
-    )
-    response.raise_for_status()
+    season = to_nba_season_string(app_season)
+    last_error: Exception | None = None
 
-    body = response.json()
-    result_set = (body.get("resultSets") or [{}])[0]
-    headers = result_set.get("headers") or []
-    rows = result_set.get("rowSet") or []
+    for attempt in range(3):
+        try:
+            response = commonteamroster.CommonTeamRoster(
+                team_id=team_id,
+                season=season,
+                timeout=30,
+            )
+            frame = response.get_data_frames()[0]
+            players = [
+                {"playerId": int(row["PLAYER_ID"]), "playerName": str(row["PLAYER"])}
+                for _, row in frame.iterrows()
+                if row.get("PLAYER_ID") and row.get("PLAYER")
+            ]
+            return sorted(players, key=lambda player: player["playerName"])
+        except Exception as exc:
+            last_error = exc
+            if attempt < 2:
+                time.sleep(2 ** attempt)
 
-    try:
-        player_name_index = headers.index("PLAYER")
-        player_id_index = headers.index("PLAYER_ID")
-    except ValueError as exc:
-        raise ValueError("Unexpected NBA roster response format") from exc
-
-    players: list[dict] = []
-    for row in rows:
-        player_id = row[player_id_index]
-        player_name = row[player_name_index]
-        if player_id and player_name:
-            players.append({"playerId": int(player_id), "playerName": str(player_name)})
-
-    players.sort(key=lambda player: player["playerName"])
-    return players
+    assert last_error is not None
+    raise last_error
 
 
 def has_finals_roster(supabase: Client, team_name: str, app_season: int = APP_SEASON) -> bool:
@@ -151,13 +137,13 @@ def sync_finals_rosters(
     """
     results: dict[str, int] = {}
 
-    with httpx.Client() as client:
-        for team_name in (team1, team2):
-            if not force and has_finals_roster(supabase, team_name, app_season):
-                results[team_name] = 0
-                continue
+    for team_name in (team1, team2):
+        if not force and has_finals_roster(supabase, team_name, app_season):
+            results[team_name] = 0
+            continue
 
-            players = fetch_team_roster_from_nba(client, team_name, app_season)
-            results[team_name] = replace_finals_roster(supabase, team_name, players, app_season)
+        players = fetch_team_roster_from_nba(team_name, app_season)
+        results[team_name] = replace_finals_roster(supabase, team_name, players, app_season)
+        time.sleep(0.5)
 
     return results

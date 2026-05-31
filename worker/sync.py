@@ -237,16 +237,19 @@ async def sync_all() -> dict:
     finals_mvp = get_finals_mvp_event(existing_by_parse)
     roster_sync_summary = ""
     if finals_mvp:
-        newly_created_mvp = any(e.get("id") == "finalsMvp" for e in inserted_special)
-        roster_sync = sync_finals_rosters(
-            supabase,
-            finals_mvp["team1"],
-            finals_mvp["team2"],
-            force=newly_created_mvp,
-        )
-        synced = [f"{team}+{count}" for team, count in roster_sync.items() if count > 0]
-        if synced:
-            roster_sync_summary = f" · rosters: {', '.join(synced)}"
+        try:
+            newly_created_mvp = any(e.get("id") == "finalsMvp" for e in inserted_special)
+            roster_sync = sync_finals_rosters(
+                supabase,
+                finals_mvp["team1"],
+                finals_mvp["team2"],
+                force=newly_created_mvp,
+            )
+            synced = [f"{team}+{count}" for team, count in roster_sync.items() if count > 0]
+            if synced:
+                roster_sync_summary = f" · rosters: {', '.join(synced)}"
+        except Exception as exc:
+            _error(f"Finals roster sync failed (continuing): {exc}")
 
     special_summary = f" · +{len(inserted_special)} special" if inserted_special else ""
     special_summary += roster_sync_summary

@@ -725,7 +725,7 @@ class TestFinalsRoster:
         )
         monkeypatch.setattr(
             "finals_roster.fetch_team_roster_from_nba",
-            lambda _client, team, _season: calls.append(team) or [
+            lambda team, app_season=2026: calls.append(team) or [
                 {"playerId": 1, "playerName": "Test Player"},
             ],
         )
