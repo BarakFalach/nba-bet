@@ -98,3 +98,13 @@ def update_bets_points(supabase: Client, updates: list[tuple[str, dict]]) -> int
     for bet_id, data in updates:
         supabase.table("bets").update(data).eq("id", bet_id).execute()
     return len(updates)
+
+
+def get_finals_mvp_event(existing_by_parse: dict[str, dict]) -> dict | None:
+    """Return the finalsMvp event if it exists with both teams set."""
+    event = existing_by_parse.get("finalsMvp")
+    if not event:
+        return None
+    if event.get("team1") and event.get("team2"):
+        return event
+    return None

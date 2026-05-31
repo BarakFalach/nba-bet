@@ -18,8 +18,10 @@ from supabase_client import (
     fetch_unscored_resolved_event_ids,
     insert_bets,
     update_bets_points,
+    get_finals_mvp_event,
 )
 from models import compute_game_numbers, map_game_to_event, build_series_events, build_special_events, calculate_points, detect_round
+from finals_roster import sync_finals_rosters
 
 
 # ---------------------------------------------------------------------------
@@ -232,7 +234,22 @@ async def sync_all() -> dict:
     for event_id, update_data in special_updates:
         update_event(supabase, event_id, update_data)
 
+    finals_mvp = get_finals_mvp_event(existing_by_parse)
+    roster_sync_summary = ""
+    if finals_mvp:
+        newly_created_mvp = any(e.get("id") == "finalsMvp" for e in inserted_special)
+        roster_sync = sync_finals_rosters(
+            supabase,
+            finals_mvp["team1"],
+            finals_mvp["team2"],
+            force=newly_created_mvp,
+        )
+        synced = [f"{team}+{count}" for team, count in roster_sync.items() if count > 0]
+        if synced:
+            roster_sync_summary = f" · rosters: {', '.join(synced)}"
+
     special_summary = f" · +{len(inserted_special)} special" if inserted_special else ""
+    special_summary += roster_sync_summary
     _step(4, "Sync series events",
           f"+{len(inserted_series)} new · {len(series_updates)} updated{special_summary}")
 
