@@ -196,7 +196,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           if (players.length === 0) {
             return res.status(503).json({
               message: 'Roster unavailable',
-              details: 'Could not load players for this team from the NBA roster API.',
+              details: 'Finals rosters have not been synced yet. The worker will populate them once the Finals matchup is set.',
             });
           }
           res.setHeader('Cache-Control', ROSTER_CACHE_CONTROL);
