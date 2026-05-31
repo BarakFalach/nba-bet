@@ -1,12 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { supabase } from '@/lib/supabaseClient';
-import NBA from 'nba';
+import { getTeamRoster } from '@/lib/nbaRoster';
 
 const LEGACY_SEASON = 2025;
 const CURRENT_SEASON = 2026;
 
 // Fallback deadline for legacy season (2025) — not used for 2026+
 const LEGACY_MVP_DEADLINE = '2025-06-30T20:00:00Z';
+
+const ROSTER_CACHE_CONTROL = 'public, s-maxage=3600, stale-while-revalidate=86400';
 
 type MvpBetStatus = 'pending_finals' | 'open' | 'closed';
 
@@ -21,35 +23,8 @@ interface FinalsTeams {
   team2: string;
 }
 
-interface FinalsPlayer {
-  playerId: number;
-  playerName: string;
-}
-
-interface CommonTeamRosterPlayer {
-  player: string;
-  playerId: number;
-}
-
-function toNbaSeasonString(season: number): string {
-  return `${season - 1}-${String(season).slice(-2)}`;
-}
-
-async function fetchTeamRoster(teamName: string, season: number): Promise<FinalsPlayer[]> {
-  const teamId = NBA.teamIdFromName(teamName);
-  if (!teamId) return [];
-
-  const roster = await NBA.stats.commonTeamRoster({
-    TeamID: teamId,
-    Season: toNbaSeasonString(season),
-  });
-
-  const players = (roster.commonTeamRoster ?? []) as CommonTeamRosterPlayer[];
-
-  return players
-    .filter((player) => player.playerId && player.player)
-    .map((player) => ({ playerId: player.playerId, playerName: player.player }))
-    .sort((a, b) => a.playerName.localeCompare(b.playerName));
+function isFinalsTeam(teamName: string, finalsTeams: FinalsTeams): boolean {
+  return teamName === finalsTeams.team1 || teamName === finalsTeams.team2;
 }
 
 async function getMvpBettingInfo(season: number): Promise<MvpBettingInfo> {
@@ -90,10 +65,6 @@ async function getFinalsTeams(season: number): Promise<FinalsTeams | null> {
   if (error) throw error;
   if (!data?.team1 || !data?.team2) return null;
   return { team1: data.team1, team2: data.team2 };
-}
-
-function isFinalsTeam(teamName: string, finalsTeams: FinalsTeams): boolean {
-  return teamName === finalsTeams.team1 || teamName === finalsTeams.team2;
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -139,8 +110,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       const [team1Roster, team2Roster] = await Promise.all([
-        fetchTeamRoster(finalsTeams.team1, seasonNum),
-        fetchTeamRoster(finalsTeams.team2, seasonNum),
+        getTeamRoster(finalsTeams.team1, seasonNum),
+        getTeamRoster(finalsTeams.team2, seasonNum),
       ]);
       const allowedPlayers = [...team1Roster, ...team2Roster];
       const matchedPlayer = allowedPlayers.find((p) => p.playerId === Number(playerId));
@@ -221,13 +192,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         try {
-          const players = await fetchTeamRoster(teamName, seasonNum);
+          const players = await getTeamRoster(teamName, seasonNum);
           if (players.length === 0) {
             return res.status(503).json({
               message: 'Roster unavailable',
               details: 'Could not load players for this team from the NBA roster API.',
             });
           }
+          res.setHeader('Cache-Control', ROSTER_CACHE_CONTROL);
           return res.status(200).json({ players });
         } catch (apiError) {
           console.error('Error fetching team roster:', apiError);
