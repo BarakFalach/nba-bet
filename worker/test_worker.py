@@ -705,3 +705,51 @@ class TestBuildSpecialEvents:
         games = [make_game(300, "Celtics", "Lakers", "2026-06-05T01:00:00.000Z")]
         new_events, _ = build_special_events(games, existing)
         assert not any(e["id"] == "finalsMvp" for e in new_events)
+
+
+class TestFinalsRoster:
+    def test_to_nba_season_string(self):
+        from finals_roster import to_nba_season_string
+
+        assert to_nba_season_string(2026) == "2025-26"
+        assert to_nba_season_string(2025) == "2024-25"
+
+    def test_sync_skips_teams_with_existing_rosters_unless_forced(self, monkeypatch):
+        from finals_roster import sync_finals_rosters
+
+        calls: list[str] = []
+
+        monkeypatch.setattr(
+            "finals_roster.has_finals_roster",
+            lambda _supabase, team, _season=2026: team == "Celtics",
+        )
+        monkeypatch.setattr(
+            "finals_roster.fetch_team_roster_from_nba",
+            lambda _client, team, _season: calls.append(team) or [
+                {"playerId": 1, "playerName": "Test Player"},
+            ],
+        )
+        monkeypatch.setattr(
+            "finals_roster.replace_finals_roster",
+            lambda _supabase, team, players, app_season=2026: len(players),
+        )
+
+        result = sync_finals_rosters(None, "Celtics", "Lakers")
+        assert result == {"Celtics": 0, "Lakers": 1}
+        assert calls == ["Lakers"]
+
+        calls.clear()
+        result = sync_finals_rosters(None, "Celtics", "Lakers", force=True)
+        assert result == {"Celtics": 1, "Lakers": 1}
+        assert calls == ["Celtics", "Lakers"]
+
+    def test_get_finals_mvp_event_requires_both_teams(self):
+        from supabase_client import get_finals_mvp_event
+
+        assert get_finals_mvp_event({}) is None
+        assert get_finals_mvp_event({"finalsMvp": {"team1": "Celtics"}}) is None
+        event = get_finals_mvp_event({
+            "finalsMvp": {"id": "finalsMvp", "team1": "Celtics", "team2": "Lakers"},
+        })
+        assert event["team1"] == "Celtics"
+        assert event["team2"] == "Lakers"
