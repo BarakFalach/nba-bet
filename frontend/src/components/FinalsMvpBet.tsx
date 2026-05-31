@@ -78,16 +78,16 @@ export default function FinalsMvpBet({ onClose }: FinalsMvpBetProps) {
     let cancelled = false;
 
     async function resolveExistingBetTeam() {
-      for (const team of [teams.team1, teams.team2]) {
+      for (const team of [teams?.team1, teams?.team2]) {
         const response = await fetch(
-          `/api/finalsMvpBet?teamName=${encodeURIComponent(team)}&season=${season}`,
+          `/api/finalsMvpBet?teamName=${encodeURIComponent(team!)}&season=${season}`,
         );
         if (!response.ok) continue;
 
         const { players } = (await response.json()) as { players: FinalsPlayer[] };
-        const match = players.find((player) => player.playerId === existingBet.playerId);
+        const match = players.find((player) => player.playerId === existingBet?.playerId);
         if (match && !cancelled) {
-          setSelectedTeam(team);
+          setSelectedTeam(team ?? null);
           setSelectedPlayer(match);
           setStep('player');
           return;
