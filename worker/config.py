@@ -63,7 +63,7 @@ STATUS_RESOLVED = 3
 # Finals special bet scoring
 # ---------------------------------------------------------------------------
 FINALS_CHAMPION_POINTS: int = int(os.environ.get("FINALS_CHAMPION_POINTS", "20"))
-FINALS_MVP_POINTS: int = int(os.environ.get("FINALS_MVP_POINTS", "20"))
+FINALS_MVP_POINTS: int = int(os.environ.get("FINALS_MVP_POINTS", "5"))
 
 # Set this to the BallDontLie player ID of the Finals MVP once announced.
 # When provided, the worker will score all finals_mvp_bet rows on next run.
