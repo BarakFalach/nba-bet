@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import time
 
-from nba_api.stats.endpoints import commonteamroster
+from nba_api.stats.endpoints import commonteamroster, playerawards
 from supabase import Client
 
 from config import APP_SEASON
@@ -119,6 +119,41 @@ def replace_finals_roster(
     ]
     response = supabase.table("finals_roster").insert(rows).execute()
     return len(response.data or [])
+
+
+def fetch_finals_mvp_player_id(
+    supabase: Client,
+    champion_team: str,
+    app_season: int = APP_SEASON,
+) -> int | None:
+    """
+    Auto-detect the Finals MVP by querying NBA awards API for each player
+    on the champion's roster. Returns the NBA player ID or None.
+    """
+    nba_season = to_nba_season_string(app_season)
+
+    # Get champion's roster from Supabase
+    query = supabase.table("finals_roster").select("playerId, playerName").eq("team", champion_team)
+    if app_season == 2025:
+        query = query.is_("season", "null")
+    else:
+        query = query.eq("season", app_season)
+    roster_rows = query.execute().data or []
+
+    for row in roster_rows:
+        player_id = int(row["playerId"])
+        try:
+            df = playerawards.PlayerAwards(player_id=player_id, timeout=30).get_data_frames()[0]
+            match = df[
+                (df["SUBTYPE2"] == "KFMVP") & (df["SEASON"] == nba_season)
+            ]
+            if not match.empty:
+                return player_id
+        except Exception:
+            pass
+        time.sleep(0.3)
+
+    return None
 
 
 def sync_finals_rosters(

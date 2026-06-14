@@ -24,7 +24,7 @@ from supabase_client import (
     update_special_bet_points,
 )
 from models import compute_game_numbers, map_game_to_event, build_series_events, build_special_events, calculate_points, detect_round
-from finals_roster import sync_finals_rosters
+from finals_roster import sync_finals_rosters, fetch_finals_mvp_player_id
 
 
 # ---------------------------------------------------------------------------
@@ -381,19 +381,29 @@ async def sync_all() -> dict:
             finals_scored += len(champion_updates)
         update_event(supabase, "finalsChampion", {"status": STATUS_RESOLVED})
 
-    # Finals MVP — requires FINALS_MVP_PLAYER_ID env var to be set
+    # Finals MVP — use env var if set, otherwise auto-detect via NBA awards API
     mvp_event = all_events_this_run.get("finalsMvp")
-    if FINALS_MVP_PLAYER_ID and mvp_event and mvp_event.get("status") != STATUS_RESOLVED:
-        all_mvp_bets = fetch_finals_mvp_bets(supabase)
-        unscored = [b for b in all_mvp_bets if b.get("pointsGained") is None]
-        if unscored:
-            mvp_updates = [
-                (b["id"], FINALS_MVP_POINTS if b.get("playerId") == FINALS_MVP_PLAYER_ID else 0)
-                for b in unscored
-            ]
-            update_special_bet_points(supabase, "finals_mvp_bet", mvp_updates)
-            finals_scored += len(mvp_updates)
-        update_event(supabase, "finalsMvp", {"status": STATUS_RESOLVED})
+    if mvp_event and mvp_event.get("status") != STATUS_RESOLVED:
+        # Determine MVP player ID: env var takes priority, then auto-detect
+        effective_mvp_id = FINALS_MVP_PLAYER_ID
+        if not effective_mvp_id and finals_series:
+            actual_champion = (
+                finals_series["team1"] if finals_series["team1Score"] > finals_series["team2Score"]
+                else finals_series["team2"]
+            )
+            effective_mvp_id = fetch_finals_mvp_player_id(supabase, actual_champion)
+
+        if effective_mvp_id:
+            all_mvp_bets = fetch_finals_mvp_bets(supabase)
+            unscored = [b for b in all_mvp_bets if b.get("pointsGained") is None]
+            if unscored:
+                mvp_updates = [
+                    (b["id"], FINALS_MVP_POINTS if int(b.get("playerId") or 0) == effective_mvp_id else 0)
+                    for b in unscored
+                ]
+                update_special_bet_points(supabase, "finals_mvp_bet", mvp_updates)
+                finals_scored += len(mvp_updates)
+            update_event(supabase, "finalsMvp", {"status": STATUS_RESOLVED})
 
     finals_summary = f"{finals_scored} bets scored" if finals_scored else "—"
     _step(7, "Score finals bets", finals_summary)
