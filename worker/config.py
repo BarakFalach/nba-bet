@@ -59,6 +59,17 @@ STATUS_RESOLVED = 3
 # Scoring rules — mirrors PredictionResultPerType in frontend/src/types/events.ts
 # Points are awarded per round and bet type.
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Finals special bet scoring
+# ---------------------------------------------------------------------------
+FINALS_CHAMPION_POINTS: int = int(os.environ.get("FINALS_CHAMPION_POINTS", "20"))
+FINALS_MVP_POINTS: int = int(os.environ.get("FINALS_MVP_POINTS", "20"))
+
+# Set this to the BallDontLie player ID of the Finals MVP once announced.
+# When provided, the worker will score all finals_mvp_bet rows on next run.
+_mvp_raw = os.environ.get("FINALS_MVP_PLAYER_ID", "")
+FINALS_MVP_PLAYER_ID: int | None = int(_mvp_raw) if _mvp_raw.strip() else None
+
 SCORING: dict[str, dict[str, int]] = {
     "playin": {
         "correctWinnerPoints": 2,

@@ -23,8 +23,8 @@ function MainPage() {
   const { season } = useSeason();
   const [showFinalsBetModal, setShowFinalsBetModal] = useState(false);
   const [showFinalsMvpModal, setShowFinalsMvpModal] = useState(false);
-  const { finalsBetTeam: finalsBet } = useFinalsBet();
-  const { finalsMvpPlayer: mvpBet, finalsMvpBet } = useFinalsMvpBet();
+  const { finalsBetTeam: finalsBet, isBetOpen: isFinalsBetOpen, finalsBetPointsGained } = useFinalsBet();
+  const { finalsMvpPlayer: mvpBet, finalsMvpBet, isBetOpen: isMvpBetOpen, mvpBetPointsGained } = useFinalsMvpBet();
 
 
   const { unplacedBets, isLoading } = useBets();
@@ -159,16 +159,26 @@ function MainPage() {
           {finalsBet}
         </p>
       </div>
-      <button
-        onClick={handleFinalsBetClick}
-        className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1 transition-colors"
-        aria-label="Change Finals bet"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-        </svg>
-      </button>
+      {finalsBetPointsGained !== null ? (
+        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+          finalsBetPointsGained > 0
+            ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+            : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
+        }`}>
+          {finalsBetPointsGained > 0 ? `✓ +${finalsBetPointsGained} pts` : '✗ Wrong'}
+        </span>
+      ) : isFinalsBetOpen ? (
+        <button
+          onClick={handleFinalsBetClick}
+          className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1 transition-colors"
+          aria-label="Change Finals bet"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+        </button>
+      ) : null}
     </div>
   ) : (
     <button
@@ -188,16 +198,26 @@ function MainPage() {
             {mvpBet ? (
               <div className="flex items-center justify-between mt-1">
                 <Player playerId={finalsMvpBet?.playerId} playerName={finalsMvpBet?.playerName} />
-                <button
-                  onClick={handleFinalsMvpClick}
-                  className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1 transition-colors"
-                  aria-label="Change Finals MVP bet"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                  </svg>
-                </button>
+                {mvpBetPointsGained !== null ? (
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                    mvpBetPointsGained > 0
+                      ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+                      : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
+                  }`}>
+                    {mvpBetPointsGained > 0 ? `✓ +${mvpBetPointsGained} pts` : '✗ Wrong'}
+                  </span>
+                ) : isMvpBetOpen ? (
+                  <button
+                    onClick={handleFinalsMvpClick}
+                    className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1 transition-colors"
+                    aria-label="Change Finals MVP bet"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </button>
+                ) : null}
               </div>
             ) : (
               <button

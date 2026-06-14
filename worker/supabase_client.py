@@ -100,6 +100,25 @@ def update_bets_points(supabase: Client, updates: list[tuple[str, dict]]) -> int
     return len(updates)
 
 
+def fetch_finals_bets(supabase: Client) -> list[dict]:
+    """Fetch all finals_bet rows for the current app season."""
+    response = supabase.table("finals_bet").select("*").eq("season", APP_SEASON).execute()
+    return response.data or []
+
+
+def fetch_finals_mvp_bets(supabase: Client) -> list[dict]:
+    """Fetch all finals_mvp_bet rows for the current app season."""
+    response = supabase.table("finals_mvp_bet").select("*").eq("season", APP_SEASON).execute()
+    return response.data or []
+
+
+def update_special_bet_points(supabase: Client, table: str, updates: list[tuple[str, int]]) -> int:
+    """Write pointsGained for each (bet_id, points) pair in the given special-bet table."""
+    for bet_id, points in updates:
+        supabase.table(table).update({"pointsGained": points}).eq("id", bet_id).execute()
+    return len(updates)
+
+
 def get_finals_mvp_event(existing_by_parse: dict[str, dict]) -> dict | None:
     """Return the finalsMvp event if it exists with both teams set."""
     event = existing_by_parse.get("finalsMvp")

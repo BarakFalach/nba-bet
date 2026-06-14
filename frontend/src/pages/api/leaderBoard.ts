@@ -39,7 +39,7 @@ export default async function handler(req, res) {
   // Step 1b: Fetch all finals bets with user IDs and team names, filtered by season
   let finalsBetsQuery = supabase
     .from('finals_bet')
-    .select('userId, finalsBet, pointsGained')
+    .select('userId, finalsBet, pointsGained, id')
   
   if (isLegacySeason) {
     finalsBetsQuery = finalsBetsQuery.is('season', null);
@@ -70,6 +70,8 @@ export default async function handler(req, res) {
   const userScores = new Map()
   const userFinalsBets = new Map() // Store finals bet info per user
   const userFinalsMvpBets = new Map() // Store finals MVP bet info per user
+  const userFinalsBetPoints = new Map<string, number | null>() // pointsGained per user
+  const userFinalsMvpBetPoints = new Map<string, number | null>() // pointsGained per user
   
   // Process regular bets
   for (const bet of bets || []) {
@@ -85,8 +87,9 @@ export default async function handler(req, res) {
     if (finalsBet.pointsGained) {
       userScores.set(uid, (userScores.get(uid) || 0) + (finalsBet.pointsGained || 0))
     }
-    // Store the team name for this user's finals bet
+    // Store the team name and result for this user's finals bet
     userFinalsBets.set(uid, finalsBet.finalsBet)
+    userFinalsBetPoints.set(uid, finalsBet.pointsGained ?? null)
     
     // Make sure this user is included in the leaderboard even if they have no other bets
     if (!userScores.has(uid)) {
@@ -101,11 +104,12 @@ export default async function handler(req, res) {
     if (finalsMvpBet.pointsGained) {
       userScores.set(uid, (userScores.get(uid) || 0) + (finalsMvpBet.pointsGained || 0))
     }
-    // Store the player name and ID for this user's finals MVP bet
+    // Store the player name, ID, and result for this user's finals MVP bet
     userFinalsMvpBets.set(uid, {
       playerName: finalsMvpBet.playerName,
       playerId: finalsMvpBet.playerId
     })
+    userFinalsMvpBetPoints.set(uid, finalsMvpBet.pointsGained ?? null)
     
     // Make sure this user is included in the leaderboard even if they have no other bets
     if (!userScores.has(uid)) {
@@ -141,28 +145,39 @@ export default async function handler(req, res) {
   const leaderboard = userIds.map(uuid => {
     const user = uuidToUser.get(uuid) || { name: 'Unknown', email: '' }
     const finalsMvpBet = userFinalsMvpBets.get(uuid) || null;
-    
+    const finalsBetPoints = userFinalsBetPoints.get(uuid) ?? null;
+    const finalsMvpBetPoints = userFinalsMvpBetPoints.get(uuid) ?? null;
+
+    const toResult = (pts: number | null): 'correct' | 'incorrect' | null => {
+      if (pts === null) return null;
+      return pts > 0 ? 'correct' : 'incorrect';
+    };
+
     return {
       name: user.name,
       email: user.email,
       score: userScores.get(uuid) || 0,
       userId: uuid,
       finalsBet: finalsBetClosed ? (userFinalsBets.get(uuid) || null) : null,
+      finalsBetResult: finalsBetClosed ? toResult(finalsBetPoints) : null,
       finalsMvpBet: finalsMvpBetClosed ? (finalsMvpBet ? finalsMvpBet.playerName : null) : null,
-      finalsMvpPlayerId: finalsMvpBetClosed ? (finalsMvpBet ? finalsMvpBet.playerId : null) : null
+      finalsMvpPlayerId: finalsMvpBetClosed ? (finalsMvpBet ? finalsMvpBet.playerId : null) : null,
+      finalsMvpBetResult: finalsMvpBetClosed ? toResult(finalsMvpBetPoints) : null,
     }
   })
   .sort((a, b) => b.score - a.score)
 
   // Return user data with score, finals bet, and finals MVP bet
   return res.status(200).json(
-    leaderboard.map(({ name, email, score, finalsBet, finalsMvpBet, finalsMvpPlayerId }) => ({ 
-      name, 
-      email, 
+    leaderboard.map(({ name, email, score, finalsBet, finalsBetResult, finalsMvpBet, finalsMvpPlayerId, finalsMvpBetResult }) => ({
+      name,
+      email,
       score,
       finalsBet,
+      finalsBetResult,
       finalsMvpBet,
-      finalsMvpPlayerId
+      finalsMvpPlayerId,
+      finalsMvpBetResult,
     })),
   )
 }

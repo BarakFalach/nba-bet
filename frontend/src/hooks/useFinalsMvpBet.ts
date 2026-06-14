@@ -9,6 +9,7 @@ interface FinalsMvpBet {
   playerId: number;
   playerName: string;
   created_at: string;
+  pointsGained?: number | null;
 }
 
 interface FinalsTeams {
@@ -31,6 +32,7 @@ interface FinalsMvpQueryResult {
   isBetOpen: boolean;
   betStatus: MvpBetStatus;
   finalsTeams: FinalsTeams | null;
+  mvpBetPointsGained: number | null;
 }
 
 interface FinalsMvpMutationResult {
@@ -126,6 +128,7 @@ export function useFinalsMvpBet(): FinalsMvpQueryResult & FinalsMvpMutationResul
     isBetOpen: queryData?.isOpen ?? false,
     betStatus: queryData?.betStatus ?? 'pending_finals',
     finalsTeams: queryData?.finalsTeams ?? null,
+    mvpBetPointsGained: queryData?.bet?.pointsGained ?? null,
     placeBet,
     isPlacing,
     error,

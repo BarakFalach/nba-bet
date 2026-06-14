@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 import httpx
 
-from config import STATUS_UPCOMING, STATUS_RESOLVED, STATUS_IN_PROGRESS, APP_SEASON, TARGET_USER_IDS, EVENTS_ONLY
+from config import STATUS_UPCOMING, STATUS_RESOLVED, STATUS_IN_PROGRESS, APP_SEASON, TARGET_USER_IDS, EVENTS_ONLY, FINALS_CHAMPION_POINTS, FINALS_MVP_POINTS, FINALS_MVP_PLAYER_ID
 from bdl_client import fetch_bdl_games
 from supabase_client import (
     get_supabase_client,
@@ -19,6 +19,9 @@ from supabase_client import (
     insert_bets,
     update_bets_points,
     get_finals_mvp_event,
+    fetch_finals_bets,
+    fetch_finals_mvp_bets,
+    update_special_bet_points,
 )
 from models import compute_game_numbers, map_game_to_event, build_series_events, build_special_events, calculate_points, detect_round
 from finals_roster import sync_finals_rosters
@@ -29,7 +32,7 @@ from finals_roster import sync_finals_rosters
 # ---------------------------------------------------------------------------
 
 _GHA = os.environ.get("GITHUB_ACTIONS") == "true"
-_TOTAL_STEPS = 6
+_TOTAL_STEPS = 7
 
 
 def _header(title: str) -> None:
@@ -341,6 +344,59 @@ async def sync_all() -> dict:
         f"{bets_scored} bets scored ({events_scored} events)" if bets_scored else "—"
     )
     _step(6, "Score resolved bets", score_summary)
+
+    # ------------------------------------------------------------------
+    # Step 7: Score finals champion & MVP bets
+    # ------------------------------------------------------------------
+    finals_scored = 0
+
+    # Merge existing_by_parse with resolved_event_states so we catch series
+    # events that JUST became resolved in this run (their updated state is in
+    # resolved_event_states but not yet reflected in existing_by_parse).
+    all_events_this_run = {**existing_by_parse, **resolved_event_states}
+
+    # Finals champion — auto-detect winner from resolved finals series event
+    finals_series = next(
+        (e for e in all_events_this_run.values()
+         if e.get("eventType") == "series"
+         and e.get("round") == "finals"
+         and e.get("status") == STATUS_RESOLVED),
+        None,
+    )
+    champion_event = all_events_this_run.get("finalsChampion")
+
+    if finals_series and champion_event and champion_event.get("status") != STATUS_RESOLVED:
+        actual_champion = (
+            finals_series["team1"] if finals_series["team1Score"] > finals_series["team2Score"]
+            else finals_series["team2"]
+        )
+        all_finals_bets = fetch_finals_bets(supabase)
+        unscored = [b for b in all_finals_bets if b.get("pointsGained") is None]
+        if unscored:
+            champion_updates = [
+                (b["id"], FINALS_CHAMPION_POINTS if b.get("finalsBet") == actual_champion else 0)
+                for b in unscored
+            ]
+            update_special_bet_points(supabase, "finals_bet", champion_updates)
+            finals_scored += len(champion_updates)
+        update_event(supabase, "finalsChampion", {"status": STATUS_RESOLVED})
+
+    # Finals MVP — requires FINALS_MVP_PLAYER_ID env var to be set
+    mvp_event = all_events_this_run.get("finalsMvp")
+    if FINALS_MVP_PLAYER_ID and mvp_event and mvp_event.get("status") != STATUS_RESOLVED:
+        all_mvp_bets = fetch_finals_mvp_bets(supabase)
+        unscored = [b for b in all_mvp_bets if b.get("pointsGained") is None]
+        if unscored:
+            mvp_updates = [
+                (b["id"], FINALS_MVP_POINTS if b.get("playerId") == FINALS_MVP_PLAYER_ID else 0)
+                for b in unscored
+            ]
+            update_special_bet_points(supabase, "finals_mvp_bet", mvp_updates)
+            finals_scored += len(mvp_updates)
+        update_event(supabase, "finalsMvp", {"status": STATUS_RESOLVED})
+
+    finals_summary = f"{finals_scored} bets scored" if finals_scored else "—"
+    _step(7, "Score finals bets", finals_summary)
 
     _footer(time.monotonic() - start)
 

@@ -96,9 +96,12 @@ function LeaderBoardPage() {
                         {entry.finalsBet ? (
                           <div className="flex items-center space-x-1">
                             <Logo teamName={entry.finalsBet} size="xsmall" />
-                            <span className="text-xs text-gray-600 dark:text-gray-400 hidden sm:inline">
-                              {entry.finalsBet}
-                            </span>
+                            {entry.finalsBetResult === 'correct' && (
+                              <span className="text-green-500 text-xs font-bold">✓</span>
+                            )}
+                            {entry.finalsBetResult === 'incorrect' && (
+                              <span className="text-red-500 text-xs font-bold">✗</span>
+                            )}
                           </div>
                         ) : (
                           <span className="text-xs text-gray-400 dark:text-gray-600 italic">
@@ -106,18 +109,24 @@ function LeaderBoardPage() {
                           </span>
                         )}
                       </div>
-                      
+
                       {/* Finals MVP Bet */}
-                      <div className="col-span-6 flex justify-left">
+                      <div className="col-span-6 flex justify-left items-center space-x-1">
                         {entry.finalsMvpBet ? (
-                          <div className="flex items-center space-x-1">
+                          <>
                             <Player
                               size="small"
                               showName={false}
                               playerId={entry?.finalsMvpPlayerId}
                               playerName={entry.finalsMvpBet}
                             />
-                          </div>
+                            {entry.finalsMvpBetResult === 'correct' && (
+                              <span className="text-green-500 text-xs font-bold">✓</span>
+                            )}
+                            {entry.finalsMvpBetResult === 'incorrect' && (
+                              <span className="text-red-500 text-xs font-bold">✗</span>
+                            )}
+                          </>
                         ) : (
                           <span className="text-xs text-gray-400 dark:text-gray-600 italic">
                             No pick

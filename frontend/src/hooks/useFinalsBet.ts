@@ -8,6 +8,7 @@ interface FinalsBet {
   userId: string;
   finalsBet: string;
   createdAt?: string;
+  pointsGained?: number | null;
 }
 
 interface FinalsQueryResult {
@@ -16,6 +17,7 @@ interface FinalsQueryResult {
   isError: boolean;
   finalsBetTeam: string;
   isBetOpen: boolean;
+  finalsBetPointsGained: number | null;
 }
 
 interface FinalsMutationResult {
@@ -92,6 +94,7 @@ export function useFinalsBet(): FinalsQueryResult & FinalsMutationResult {
     isLoading,
     isError,
     isBetOpen: queryData?.isOpen ?? false,
+    finalsBetPointsGained: queryData?.bet?.pointsGained ?? null,
     placeBet,
     isPlacing,
     error,
